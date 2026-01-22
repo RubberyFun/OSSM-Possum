@@ -1,38 +1,34 @@
-# Endless Orgasm Machine UI
+# OSSM Possum
 
-This is a browser-based UI for the Endless Orgasm Machine system for ESP32.
+#### This is a bluetooth remote app for the stock firmware of the [Kinky Makers OSSM](https://www.researchanddesire.com/pages/ossm).
 
-![Screenshot](../doc/Screenshot3.png)
+![Screenshot](public/screenshot.jpg)
 
-It runs over bluetooth!  Just connect to your EOM directly by clicking the bluetooth icon.  No ip address, wifi setup, or websockets needed.  For now it is Android or PC Chrome or Edge only! Sorry Apple and Firefox enthusiasts but they have deemed web bluetooth an unacceptable risk and it will never be available.  I'm working on a native wrapper to get past this and into the app stores.
+## Setup
 
-It is configured as a PWA!  This means you can pull it up once from https://rubberyfun.github.io/endless-orgasm-machine/eomui/public and install it as an app.  It does not require an internet connection to work after installation...its just there in app-mode ready to go.
+### There are a few options for using this app:
 
-It was meant to be stored in spiffs memory on an ESP32 but has outgrown that with the addition of buttplug.io connections to other sex toys.  A simpler version of the built output is included with the larger EOM project for monitoring websocket output. 
+1. Just pull up the web page in Chrome: [https://rubberyfun.github.io/OSSM-Possum/public/](https://rubberyfun.github.io/OSSM-Possum/public/) ()
 
-It can be run locally if you prefer.  It should be backwards compatible with the Edge-o-Matic & nogasm though missing some features like denial count and Orgasm Mode.
+1. Download it for offline use as a PWA:  Pull up the above webpage, open the browser menu and choose "Add to Home screen" then "Install".  Poof, its on your phone even if you're in a dungeon with no cell service.
 
-![Screenshot](../doc/Screenshot.png)
-## Use
-- Click the bluetooth icon to connect to the EOM (it should be visible as "Libotoy").  The UI will now respond to the pressure applied to the EOM
-- Click the duck icon to connect to a toy such as a vibrator.  The toy will now increase in intensity along with the "pleasure" meter of the app.
-- If clenches are detected by the EOM the "pleasure" meter will drop accordingly and the toy will follow.
+1. Get it from the Google Play store.  This is WIP - estimated launch will be 2/14/2026 due to Google red tape.
+
+1. Get it from the Apple App Store.  OK, this isn't actually an option yet but I'm working on it.  The app is built but getting it in their store is a royal pain in the ass.
+
+## Quirks
+
+- This only supports OSSM devices with a stock firmware from 2026 or newer.If you bought your OSSM before that you can easily upgrade it using their [web flashing tool](https://dashboard.researchanddesire.com/app/tools/web-flasher).
 
 
-## Building 
-- from the eomui directory run ```npm install``` then ```npm run build```
-- the output ```index.html``` will automatically overwrite the version in the /data directory of the EOM project.
-- using platformIO tools ```build filesystem``` then ```upload filesystem``` to update your device
-- the EOM code itself doesn't need to be built/uploaded again
+- I didn't include simple penetration mode.  It starts up in "Simple Stroke" already...I just don't see the need.
 
-## Development
-- run ```vite```
-- visit ```http://localhost:5173/``` in your browser
-- enter the ip address of your EOM and hit connect - it will open a websocket connection and request a stream of readings
-- to speed up development the IP address can be entered into the code on line 8 of [/src/App.svelte](/src/App.svelte) 
-- if you need SSL locally use ```npm i @vitejs/plugin-basic-ssl```
+- Safari and Firefox are not onboard with web pages having access to bluetooth...they never will be for better or worse.  You need Chrome for the web version...oh and Apple has a stranglehold on chrome, so it won't work for iOS at all.
 
-## License
-This UI was not derived from any previous projects and is released under GPL courtesy of Claus Macher.  If you aren't familiar with GPL it basically means you can do whatever you want with the code but anything you make with it should also be released under GPL.
+## Fine print
 
-The buttplug.io library used by this project has a BSD-3 License...which basically means the license and attribution must be distributed with any projects using the code.
+I made this for people to enjoy...no strings attached, no cost, no in-app advertising, completely open-source.
+
+This UI was not derived from any previous projects and is released under [Creative Commons ShareAlike](https://creativecommons.org/licenses/by-sa/4.0/deed.en) courtesy of Claus Macher.  It basically means you can do whatever you want with the code but anything you make with it should include an attribution and keep the same license.
+
+This is not directly affiliated with Kinky Makers or their products in any way...I just think they're OSSM.
