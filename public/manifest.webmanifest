@@ -1,0 +1,1 @@
+{"name":"OSSM Possum","short_name":"OSSM Possum","description":"Control interface for the OSSM","start_url":"./","display":"standalone","background_color":"#3a3a3a","theme_color":"#3a3a3a","lang":"en","scope":"./","icons":[{"src":"possum_logo_192.png","sizes":"192x192","type":"image/png"},{"src":"possum_logo_512.png","sizes":"512x512","type":"image/png"}]}

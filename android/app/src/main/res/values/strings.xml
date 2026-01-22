@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">OSSMPossum</string>
+    <string name="title_activity_main">OSSMPossum</string>
+    <string name="package_name">com.rubberyfun.ossmpossum.app</string>
+    <string name="custom_url_scheme">com.rubberyfun.ossmpossum.app</string>
+</resources>
