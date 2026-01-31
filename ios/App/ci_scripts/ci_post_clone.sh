@@ -1,8 +1,11 @@
 #!/bin/sh
+pwd
+ls -la
+cd ../../..
+pwd
+ls -la
 brew install node
-npm install
 brew install cocoapods
-
+npm install
 npm run build
-npx cap add ios
 npx cap copy ios
