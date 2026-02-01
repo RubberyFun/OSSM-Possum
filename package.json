@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^6.0.1",
+    "@capacitor/cli": "^8.0.2",
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@tsconfig/svelte": "^5.0.5",
     "@types/node": "^24.6.0",
@@ -28,10 +28,10 @@
     "vite-plugin-singlefile": "^2.3.0"
   },
   "dependencies": {
-    "@capacitor-community/bluetooth-le": "^6.0.0",
-    "@capacitor/android": "^6.0.1",
-    "@capacitor/core": "^6.0.1",
-    "@capacitor/ios": "^6.2.1",
+    "@capacitor-community/bluetooth-le": "^8.0.2",
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
     "buffer": "^6.0.3",
     "buttplug": "0.13.2",
     "events": "^3.3.0"
