@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>To safely operate an OSSM this app needs to continue to maintain bluetooth connections even while not in the foreground.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
@@ -30,6 +32,7 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
+		<string>bluetooth-le</string>
 		<string>armv7</string>
 	</array>
 	<key>UIStatusBarStyle</key>
