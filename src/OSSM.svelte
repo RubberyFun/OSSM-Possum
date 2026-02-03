@@ -12,6 +12,7 @@
     sliderElement?: HTMLInputElement;
     limitMin?: number;  // EOM function: limit slider control
     limitMax?: number;  // EOM function: limit slider control
+    description?: string;
   }
 
   interface OSSMdevice {
@@ -25,10 +26,13 @@
     conn_status: string;
     unpause_speed: number;
     patterns: string[];
+    patternDescriptions: string[][];
+    strokerMode: boolean;
     controls: Record<string, OSSMcontrol>;
     isWriting: boolean;
     setControl(name: string, value: number): Promise<void>;
   }
+
 
   class OSSMDevice implements OSSMdevice {
     name = $state("");
@@ -39,11 +43,22 @@
     rx_patterns = "";
     tx = "";
     tx_knob = "";
+    strokerMode = $state(false);
     conn_status = $state("Disconnected");
     patterns = $state<string[]>([]);
     controls = $state<Record<string, OSSMcontrol>>({});
     isWriting = $state(false);
     unpause_speed = 1;
+    patternDescriptions = [
+      ["Simple Stroke", "Acceleration, coasting, deceleration equally split; sensation does nothing"],
+      ["Teasing Pounding", "Sensation increases speed in one direction, balanced in the middle"],
+      ["Robo Stroke", "Sensation varies acceleration; from robotic to gradual"],
+      ["Half'n'Half", "Full and half depth strokes alternate; sensation affects speed"],
+      ["Deeper", "Stroke depth increases per cycle; sensation sets count"],
+      ["Stop'n'Go", "Pauses between strokes; sensation adjusts length"],
+      ["Insist", "Modifies length, maintains speed; sensation influences direction"]
+    ];
+
 
     constructor() {
       this.service = "522b443a-4f53-534d-0001-420badbabe69";
@@ -53,15 +68,15 @@
       this.rx_patterns = "522b443a-4f53-534d-3000-420badbabe69";
       this.unpause_speed = 1;
       this.controls = {
-        speed: { value: 0, min: 0, max: 100, mode: "pleasure", limitMin: 0, limitMax: 100, inverted: false },
-        stroke: { value: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false  },
-        depth: { value: 10, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false  },
-        sensation: { value: 0, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false  },
-        pattern: { value: 0, min: 0, max: 6, mode: "manual", limitMin: 0, limitMax: 6, inverted: false  },
+        speed: { value: 0, min: 0, max: 100, mode: "pleasure", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how fast it goes back and forth" },
+        stroke: { value: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust the length of each stroke"  },
+        depth: { value: 10, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how deep the strokes go"  },
+        sensation: { value: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust features of the current pattern.  50 = no adjustment"  },
+        pattern: { value: 0, min: 0, max: 6, mode: "manual", limitMin: 0, limitMax: 6, inverted: false, description: "Choose from preset stroke patterns"  },
       };
     }
 
-    async setControl(name: string, value: number) {
+    async setControl(name: string, value: number, recursiveCommand: boolean = false): Promise<void> {
       console.log(`Setting OSSM control ${name} to value ${value}`);
       if (!this.deviceId) {
         throw new Error("Not connected to Bluetooth device");
@@ -87,6 +102,15 @@
         console.error("Failed writing control value:", error);
       } finally {
         this.isWriting = false;
+        if (this.strokerMode && !recursiveCommand) {
+          if (name === "depth") {
+            const derivedStroke = Math.round((value - 50) * 2);
+            this.setControl("stroke", derivedStroke, true);
+          } else if (name === "stroke") {
+            const derivedDepth = Math.round((value / 2) + 50);
+            this.setControl("depth", derivedDepth, true);
+          }
+        }
       }
     }
   }
@@ -100,9 +124,12 @@
   }
   
   let { devices = $bindable([]), EOMembedded = false  }: Props = $props();
+  
+  let connectionError = $state<string | null>(null);
 
   async function connectBluetooth() {
     let newOSSM = new OSSMDevice();
+    connectionError = null;
     
     try {
       // Initialize BLE client
@@ -166,6 +193,7 @@
     } catch (error) {
       console.error("Bluetooth connection failed:", error);
       newOSSM.conn_status = "Connection failed";
+      connectionError = error instanceof Error ? error.message : String(error);
     }
   }
 
@@ -175,134 +203,151 @@
 <div class="bluetooth-ossm-control">
   {#if devices.length}
     {#each devices as ossm, deviceIndex}
-            <div style="display: flex;flex-direction: row;justify-content: space-between;margin-bottom: 10px; ">
+      <div style="display: flex;flex-direction: row;justify-content: space-between;margin-bottom: 10px; ">
 
-              <div>
-                {#if ($state.snapshot(ossm.controls)["speed"].value > 0)} 
-                  <button class="device-pause" title="Pause" onclick={() => {
-                        ossm.setControl("speed", 0);
+        <div>
+          {#if ($state.snapshot(ossm.controls)["speed"].value > 0)} 
+            <button class="device-pause" title="Pause" onclick={() => {
+                  ossm.setControl("speed", 0);
+            }}>
+              <div style="line-height: 1.25;">❚❚</div>
+            <div style="font-size: xx-small;">Pause</div>
+            </button>
+          {:else}
+            <button class="device-resume" title="Pause" onclick={() => {
+                  ossm.setControl("speed", $state.snapshot(ossm.unpause_speed));
+            }}>
+            ▶
+            <div style="font-size: xx-small;">Resume</div>
+            </button>
+          {/if}
+        </div>
+
+        <div>
+          <button class="device-disconnect" title="Disconnect" onclick={async () => {
+              if (ossm.deviceId) {
+                await BleClient.disconnect(ossm.deviceId);
+              }
+          }}>
+            ✕
+          <div style="font-size: xx-small; font-weight: normal;">Disconnect</div>
+          </button>
+        </div>
+      </div>
+
+      {#each Object.entries(ossm.controls) as control, controlIndex}
+        {#if (control[0] !== "depth" || !ossm.strokerMode)}
+
+          <div class="device-sliders" title={control[1].description ?? ""}>
+            <div style="display: flex;flex-direction: row;justify-content: space-between" >
+
+                <div style="font-weight: bold; margin-bottom: 1px; white-space: nowrap;">
+                  {#if (control[0] === "pattern")}
+                    {console.log("Pattern control value:", control[1].value,$state.snapshot(ossm.patterns))}
+                    Pattern: {$state.snapshot(ossm.patterns)[control[1].value] ?? control[1].value}
+                    <span class="minMaxText"> - {ossm.patternDescriptions[control[1].value]?.[1] ?? ""}</span>
+                  {:else}
+                    {control[0].charAt(0).toUpperCase() + control[0].slice(1)}: {control[1].value} 
+                    <span class="minMaxText">(Min: {control[1].limitMin}, Max: {control[1].limitMax})</span>
+                  {/if}
+                </div>
+
+                {#if (EOMembedded)}
+                <div>
+                  <select id={deviceIndex + "-" + control[0] + "-mode"} onchange={async (e) => {
+                      const mode = (e.target as HTMLSelectElement).value;
+                      console.log(`Setting mode for ${ossm.name} ${control[0]} to ${mode}`);
+                      control[1].mode = mode;
                   }}>
-                   <div style="line-height: 1.25;">❚❚</div>
-                  <div style="font-size: xx-small;">Pause</div>
-                  </button>
-                {:else}
-                  <button class="device-resume" title="Pause" onclick={() => {
-                        ossm.setControl("speed", $state.snapshot(ossm.unpause_speed));
-                  }}>
-                  ▶
-                  <div style="font-size: xx-small;">Resume</div>
-                  </button>
+                      <option value="manual" selected={control[1].mode === "manual"}>Manual control only</option>
+                      <option value="pleasure" selected={control[1].mode === "pleasure"}>Connect to Pleasure</option>
+                      <option value="arousal" selected={control[1].mode === "arousal"}>Connect to Arousal</option>
+                      <option value="pressure" selected={control[1].mode === "pressure"}>Connect to Pressure</option>
+                      <option value="denied" selected={control[1].mode === "denied"}>Connect to Denials</option>
+                  </select>
+                  </div>
+                  <div class="invertedText">
+                    Invert:
+                      <input type="checkbox" id={deviceIndex + "-" + control[0] + "-invert"} checked={control[1].inverted} onchange={async (e) => {
+                          control[1].inverted = (e.target as HTMLInputElement).checked;
+                      }}/>
+                  </div>
                 {/if}
-              </div>
-
-
-              <div>
-                <button class="device-disconnect" title="Disconnect" onclick={async () => {
-                    if (ossm.deviceId) {
-                      await BleClient.disconnect(ossm.deviceId);
-                    }
-                }}>
-                  ✕
-                <div style="font-size: xx-small; font-weight: normal;">Disconnect</div>
-                </button>
-              </div>
             </div>
 
-        {#each Object.entries(ossm.controls) as control, controlIndex}
-        <div class="device-sliders">
-          <div style="display: flex;flex-direction: row;justify-content: space-between" >
+            <!-- svelte-ignore binding_property_non_reactive -->
+            <input 
+                id={`control-${deviceIndex}-${control[0]}-slider`} 
+                class="main-slider"
+                type="range" 
+                min={control[1].limitMin ?? control[1].min}
+                max={control[1].limitMax ?? control[1].max} 
+                value={control[1].value}
+                style="background: hsl({controlIndex * (360 / Object.keys(ossm.controls).length)}, 30%, 50%);"
+                bind:this={control[1].sliderElement} oninput={(e) => {
+                  //debounce this
+                  const newValue = parseInt((e.target as HTMLInputElement)?.value ?? "0");
+                  ossm.setControl(
+                    control[0], 
+                    parseInt((e.target as HTMLInputElement)?.value ?? "0")
+                    //Math.round((newValue - control[1].min) / (control[1].max - control[1].min) * ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min))
+                  );
+                }}/>
+            <div class="slider">
+                <div id={`control-${deviceIndex}-${control[0]}-range-slider`} class="range-slider"></div>
+            </div>
 
-              <div style="font-weight: bold; margin-bottom: 1px; white-space: nowrap;">
-                {#if (control[0] === "pattern")}
-                  {console.log("Pattern control value:", control[1].value,$state.snapshot(ossm.patterns))}
-                  Pattern: {$state.snapshot(ossm.patterns)[control[1].value] ?? control[1].value}
-                {:else}
-                  {control[0].charAt(0).toUpperCase() + control[0].slice(1)}: {control[1].value} 
-                  <span class="minMaxText">(Min: {control[1].limitMin}, Max: {control[1].limitMax})</span>
-                {/if}
-              </div>
-
-              {#if (EOMembedded)}
-              <div>
-                <select id={deviceIndex + "-" + control[0] + "-mode"} onchange={async (e) => {
-                    const mode = (e.target as HTMLSelectElement).value;
-                    console.log(`Setting mode for ${ossm.name} ${control[0]} to ${mode}`);
-                    control[1].mode = mode;
-                }}>
-                    <option value="manual" selected={control[1].mode === "manual"}>Manual control only</option>
-                    <option value="pleasure" selected={control[1].mode === "pleasure"}>Connect to Pleasure</option>
-                    <option value="arousal" selected={control[1].mode === "arousal"}>Connect to Arousal</option>
-                    <option value="pressure" selected={control[1].mode === "pressure"}>Connect to Pressure</option>
-                    <option value="denied" selected={control[1].mode === "denied"}>Connect to Denials</option>
-                </select>
-                </div>
-                <div class="invertedText">
-                  Invert:
-                    <input type="checkbox" id={deviceIndex + "-" + control[0] + "-invert"} checked={control[1].inverted} onchange={async (e) => {
-                        control[1].inverted = (e.target as HTMLInputElement).checked;
-                    }}/>
-                </div>
-              {/if}
-          </div>
-
-          <!-- svelte-ignore binding_property_non_reactive -->
-          <input 
-              id={`control-${deviceIndex}-${control[0]}-slider`} 
-              class="main-slider"
-              type="range" 
-              min={control[1].limitMin ?? control[1].min}
-              max={control[1].limitMax ?? control[1].max} 
-              value={control[1].value}
-              style="background: hsl({controlIndex * (360 / Object.keys(ossm.controls).length)}, 30%, 50%);"
-              bind:this={control[1].sliderElement} oninput={(e) => {
-                //debounce this
-                const newValue = parseInt((e.target as HTMLInputElement)?.value ?? "0");
-                ossm.setControl(
-                  control[0], 
-                  parseInt((e.target as HTMLInputElement)?.value ?? "0")
-                  //Math.round((newValue - control[1].min) / (control[1].max - control[1].min) * ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min))
-                );
-              }}/>
-          <div class="slider">
-              <div id={`control-${deviceIndex}-${control[0]}-range-slider`} class="range-slider"></div>
-          </div>
-
-          <div class="range-input">
-              <input id={`control-${deviceIndex}-${control[0]}-min`} type="range" class="min-range"  step="1" 
+            <div class="range-input">
+                <input id={`control-${deviceIndex}-${control[0]}-min`} type="range" class="min-range"  step="1" 
+                  min={control[1].min} 
+                  max={control[1].max} 
+                  value={control[1].limitMin}
+                  oninput={(e) => {
+                    const originalValue = control[1].limitMin ?? control[1].min;
+                    control[1].limitMin = parseInt((e.target as HTMLInputElement)?.value ?? "0");
+                    const rangeInput = document.querySelector(`#control-${deviceIndex}-${control[0]}-range-slider`) as HTMLInputElement;
+                    rangeInput.style.left = `${control[1].limitMin / (control[1].max) * 100}%`;
+                    const newSpeed = ((control[1].value - originalValue) / ((control[1].limitMax ?? control[1].max ) - originalValue)) *
+                      ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
+                    ossm.setControl(control[0], Math.round(newSpeed));
+                  }} 
+                />
+                <input id={`control-${deviceIndex}-${control[0]}-max`} type="range" class="max-range"  step="1" 
                 min={control[1].min} 
                 max={control[1].max} 
-                value={control[1].limitMin}
+                value={control[1].limitMax} 
                 oninput={(e) => {
-                  const originalValue = control[1].limitMin ?? control[1].min;
-                  control[1].limitMin = parseInt((e.target as HTMLInputElement)?.value ?? "0");
-                  const rangeInput = document.querySelector(`#control-${deviceIndex}-${control[0]}-range-slider`) as HTMLInputElement;
-                  rangeInput.style.left = `${control[1].limitMin / (control[1].max) * 100}%`;
-                  const newSpeed = ((control[1].value - originalValue) / ((control[1].limitMax ?? control[1].max ) - originalValue)) *
-                    ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
-                  ossm.setControl(control[0], Math.round(newSpeed));
-                }} 
-              />
-              <input id={`control-${deviceIndex}-${control[0]}-max`} type="range" class="max-range"  step="1" 
-              min={control[1].min} 
-              max={control[1].max} 
-              value={control[1].limitMax} 
-              oninput={(e) => {
-                  const originalValue = control[1].limitMax ?? control[1].max;
-                  control[1].limitMax = parseInt((e.target as HTMLInputElement)?.value ?? "255");
-                  const rangeInput = document.querySelector(`#control-${deviceIndex}-${control[0]}-range-slider`) as HTMLInputElement;
-                  if (rangeInput) {
-                    rangeInput.style.right = `${(control[1].max - (control[1].limitMax ?? control[1].max)) / control[1].max * 100}%`;
-                  }
-                  const newSpeed = ((control[1].value - (control[1].limitMin ?? control[1].min)) / ((control[1].limitMax ?? control[1].max ) - originalValue)) *
-                    ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
-                  ossm.setControl(control[0], Math.round(newSpeed));
-                }} 
-              />
+                    const originalValue = control[1].limitMax ?? control[1].max;
+                    control[1].limitMax = parseInt((e.target as HTMLInputElement)?.value ?? "255");
+                    const rangeInput = document.querySelector(`#control-${deviceIndex}-${control[0]}-range-slider`) as HTMLInputElement;
+                    if (rangeInput) {
+                      rangeInput.style.right = `${(control[1].max - (control[1].limitMax ?? control[1].max)) / control[1].max * 100}%`;
+                    }
+                    const newSpeed = ((control[1].value - (control[1].limitMin ?? control[1].min)) / ((control[1].limitMax ?? control[1].max ) - originalValue)) *
+                      ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
+                    ossm.setControl(control[0], Math.round(newSpeed));
+                  }} 
+                />
+            </div>
+
+
           </div>
+        {/if}
+      {/each}
+
+      <div style="display: flex;flex-direction: row; justify-content: center; margin-bottom: 0px; ">
 
 
+        <div style="font-size: small; margin-top: 5px;color: #666;">
+          <input type="checkbox" id="stroker mode" checked={ossm.strokerMode} onchange={async (e) => {
+              const strokerMode = (e.target as HTMLInputElement).checked;
+              console.log(`Setting OSSM stroker mode to ${strokerMode}`);
+              ossm.strokerMode = strokerMode;
+          }}/> Stroker Mode (keeps stroke centered within its range)
         </div>
-        {/each}
+
+      </div>
+
     {/each}
     {:else}
     <div  style="font-size: small;">
@@ -319,7 +364,17 @@
     <button onclick={() => connectBluetooth()}>
       Connect to an{#if devices.length}other{:else}{/if} OSSM device
     </button>
+    
   </div>
+  {/if}
+  
+  {#if connectionError}
+    <div style="color: #c00; font-weight: bold; margin-top: 10px; padding: 10px; background-color: #fee; border: 1px solid #faa; border-radius: 4px;">
+      ⚠ Connection error: {connectionError}
+      <button style="margin-left: 10px; font-size: small;" onclick={() => {
+        connectionError = null;
+      }}>Dismiss</button>
+    </div>
   {/if}
 
 </div>

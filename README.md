@@ -14,21 +14,21 @@
 
 1. Get it from the Google Play store.  This is WIP - estimated launch will be 2/14/2026 due to Google red tape.
 
-1. Get it from the Apple App Store.  OK, this isn't actually an option yet but I'm working on it.  The app is built but getting it in their store is a royal pain in the ass.
+1. Get it from the Apple App Store...  Apple is more straightforward to work with: they just want money. (it's $100/yr to launch apps and you can't do it without having a newer mac)
 
 ## Quirks
 
 - This only supports OSSM devices with a stock firmware from 2026 or newer.If you bought your OSSM before that you can easily upgrade it using their [web flashing tool](https://dashboard.researchanddesire.com/app/tools/web-flasher).
 
 
-- I didn't include simple penetration mode.  It starts up in "Simple Stroke" already...I just don't see the need.
+- I didn't include simple penetration mode.  It starts up in the "Simple Stroke" pattern already...They are identical so I just don't see the need.
 
-- Safari and Firefox are not onboard with web pages having access to bluetooth...they never will be for better or worse.  You need Chrome for the web version...oh and Apple has a stranglehold on chrome, so it won't work for iOS at all.
+- Safari and Firefox are not onboard with web pages having access to bluetooth...they never will be for better or worse.  You need Chrome for the web version...oh and Apple has a stranglehold on chrome, so it won't work for iOS at all without an app.
 
 ## Fine print
 
 I made this for people to enjoy...no strings attached, no cost, no in-app advertising, completely open-source.
 
-This UI was not derived from any previous projects and is released under [Creative Commons ShareAlike](https://creativecommons.org/licenses/by-sa/4.0/deed.en) courtesy of Claus Macher.  It basically means you can do whatever you want with the code but anything you make with it should include an attribution and keep the same license.
+This UI was not derived from any previous projects and is released under [Creative Commons Share Alike](https://creativecommons.org/licenses/by-sa/4.0/deed.en) courtesy of Claus Macher.  It basically means you can do whatever you want with the code but anything you make with it should include an attribution and keep the same license.
 
 This is not directly affiliated with Kinky Makers or their products in any way...I just think they're OSSM.
