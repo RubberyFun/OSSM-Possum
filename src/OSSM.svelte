@@ -50,7 +50,7 @@
     isWriting = $state(false);
     unpause_speed = 1;
     patternDescriptions = [
-      ["Simple Stroke", "Acceleration, coasting, deceleration equally split; sensation does nothing"],
+      ["Simple Stroke", "Acceleration, coasting, & deceleration are evenly balanced"],
       ["Teasing Pounding", "Sensation increases speed in one direction, balanced in the middle"],
       ["Robo Stroke", "Sensation varies acceleration; from robotic to gradual"],
       ["Half'n'Half", "Full and half depth strokes alternate; sensation affects speed"],
@@ -71,8 +71,8 @@
         speed: { value: 0, min: 0, max: 100, mode: "pleasure", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how fast it goes back and forth" },
         stroke: { value: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust the length of each stroke"  },
         depth: { value: 10, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how deep the strokes go"  },
-        sensation: { value: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust features of the current pattern.  50 = no adjustment"  },
         pattern: { value: 0, min: 0, max: 6, mode: "manual", limitMin: 0, limitMax: 6, inverted: false, description: "Choose from preset stroke patterns"  },
+        sensation: { value: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust features of the current pattern.  50 = no adjustment"  },
       };
     }
 
@@ -110,6 +110,11 @@
             const derivedDepth = Math.round((value / 2) + 50);
             this.setControl("depth", derivedDepth, true);
           }
+        }
+        if (name === "pattern") {
+          // if (this.patterns[value] === "Teasing Pounding") {
+            this.setControl("sensation", 50, true);  //lets just always reset the sensation to 50 on pattern change for safety.  
+          // }
         }
       }
     }
@@ -236,7 +241,8 @@
       </div>
 
       {#each Object.entries(ossm.controls) as control, controlIndex}
-        {#if (control[0] !== "depth" || !ossm.strokerMode)}
+        {#if (!(control[0] === "depth" && ossm.strokerMode) && 
+              !(control[0] === "sensation" && ossm.patterns[ossm.controls["pattern"].value] === "Simple Stroke"))}
 
           <div class="device-sliders" title={control[1].description ?? ""}>
             <div style="display: flex;flex-direction: row;justify-content: space-between" >
@@ -244,8 +250,8 @@
                 <div style="font-weight: bold; margin-bottom: 1px; white-space: nowrap;">
                   {#if (control[0] === "pattern")}
                     {console.log("Pattern control value:", control[1].value,$state.snapshot(ossm.patterns))}
-                    Pattern: {$state.snapshot(ossm.patterns)[control[1].value] ?? control[1].value}
-                    <span class="minMaxText"> - {ossm.patternDescriptions[control[1].value]?.[1] ?? ""}</span>
+                    Pattern: <span style="font-weight: normal;">{$state.snapshot(ossm.patterns)[control[1].value] ?? control[1].value}</span>
+                    <div class="minMaxText"  style="font-weight: normal;">{ossm.patternDescriptions[control[1].value]?.[1] ?? ""}</div>
                   {:else}
                     {control[0].charAt(0).toUpperCase() + control[0].slice(1)}: {control[1].value} 
                     <span class="minMaxText">(Min: {control[1].limitMin}, Max: {control[1].limitMax})</span>
