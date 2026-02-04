@@ -16,6 +16,13 @@
 
 1. Get it from the Apple App Store...  Apple is more straightforward to work with: they just want money. (it's $100/yr to launch apps and you can't do it without having a newer mac)
 
+## Demonstration video
+
+<video controls width="100%">
+  <source src="public/demo1b.mp4" type="video/mp4" controls>
+  Your browser does not support the video tag.
+</video>
+
 ## Quirks
 
 - This only supports OSSM devices with a stock firmware from 2026 or newer.If you bought your OSSM before that you can easily upgrade it using their [web flashing tool](https://dashboard.researchanddesire.com/app/tools/web-flasher).
