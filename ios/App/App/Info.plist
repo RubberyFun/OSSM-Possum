@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>localhost</string>
+		<string>rubberyfun.github.io</string>
+	</array>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.entertainment</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>To safely operate an OSSM this app needs to continue to maintain bluetooth connections even while not in the foreground.</string>
 	<key>CFBundleDevelopmentRegion</key>
