@@ -21,9 +21,11 @@
 ## Demonstration video
 
 <video controls width="100%">
-  <source src="https://rubberyfun.github.io/OSSM-Possum/public/demo1b.mp4" type="video/mp4" controls>
+  <source src="https://github.com/user-attachments/assets/c111f98a-7eac-4db5-adf4-1a5d3c2b057a" type="video/mp4" controls>
   Your browser does not support the video tag.
 </video>
+
+[Link to the demonstration video](https://rubberyfun.github.io/OSSM-Possum/public/demo1b.mp4)
 
 ## Quirks
 
