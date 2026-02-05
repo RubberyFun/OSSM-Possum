@@ -5,6 +5,7 @@
 
   interface OSSMcontrol {
     value: number;
+    default: number;
     min: number;
     max: number;
     mode: string; // "manual", "pleasure", "arousal", "pressure", "denied" corresponding to EOM states
@@ -31,6 +32,7 @@
     controls: Record<string, OSSMcontrol>;
     isWriting: boolean;
     setControl(name: string, value: number): Promise<void>;
+    resetControls(): void;
   }
 
 
@@ -68,17 +70,26 @@
       this.rx_patterns = "522b443a-4f53-534d-3000-420badbabe69";
       this.unpause_speed = 1;
       this.controls = {
-        speed: { value: 0, min: 0, max: 100, mode: "pleasure", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how fast it goes back and forth" },
-        stroke: { value: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust the length of each stroke"  },
-        depth: { value: 10, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how deep the strokes go"  },
-        pattern: { value: 0, min: 0, max: 6, mode: "manual", limitMin: 0, limitMax: 6, inverted: false, description: "Choose from preset stroke patterns"  },
-        sensation: { value: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust features of the current pattern.  50 = no adjustment"  },
+        speed: { value: 0, default: 0, min: 0, max: 100, mode: "pleasure", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how fast it goes back and forth" },
+        stroke: { value: 50, default: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust the length of each stroke"  },
+        depth: { value: 10, default: 10, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how deep the strokes go"  },
+        pattern: { value: 0, default: 0, min: 0, max: 6, mode: "manual", limitMin: 0, limitMax: 6, inverted: false, description: "Choose from preset stroke patterns"  },
+        sensation: { value: 50, default: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust features of the current pattern.  50 = no adjustment"  },
       };
+    }
+
+    resetControls(): void {
+      this.controls["speed"].value = this.controls["speed"].default;
+      this.controls["stroke"].value = this.controls["stroke"].default;
+      this.controls["depth"].value = this.controls["depth"].default;
+      this.controls["pattern"].value = this.controls["pattern"].default;
+      this.controls["sensation"].value = this.controls["sensation"].default;
     }
 
     async setControl(name: string, value: number, recursiveCommand: boolean = false): Promise<void> {
       console.log(`Setting OSSM control ${name} to value ${value}`);
       if (!this.deviceId) {
+        disconnectDevice(this);
         throw new Error("Not connected to Bluetooth device");
       }
       
@@ -132,6 +143,13 @@
   
   let connectionError = $state<string | null>(null);
 
+  function disconnectDevice(device: OSSMdevice) {
+    devices = devices.filter(d => d.deviceId !== device.deviceId);
+    device.deviceId = null;
+    device.conn_status = "Disconnected";
+    device.resetControls();
+  }
+
   async function connectBluetooth() {
     let newOSSM = new OSSMDevice();
     connectionError = null;
@@ -154,12 +172,12 @@
       // Connect to device with disconnect callback
       await BleClient.connect(device.deviceId, (deviceId) => {
         console.log(`Device ${deviceId} disconnected`);
-        devices = devices.filter(d => d.deviceId !== deviceId);
-        newOSSM.deviceId = null;
-        newOSSM.conn_status = "Disconnected";
+        disconnectDevice(newOSSM);
       });
       
       newOSSM.conn_status = "Connected";
+
+
 
       // Send startup sequence
       try {
@@ -299,6 +317,13 @@
                     //Math.round((newValue - control[1].min) / (control[1].max - control[1].min) * ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min))
                   );
                 }}/>
+            {#if control[0] === "pattern"}
+              <div class="pattern-numbers">
+                {#each Array.from({ length: control[1].max - control[1].min + 1 }, (_, i) => i + control[1].min) as num}
+                  <span class="pattern-number" style="left: {(num - control[1].min) / (control[1].max - control[1].min) * 100}%;">{num + 1}</span>
+                {/each}
+              </div>
+            {/if}
             <div class="slider">
                 <div id={`control-${deviceIndex}-${control[0]}-range-slider`} class="range-slider"></div>
             </div>
@@ -349,6 +374,13 @@
               const strokerMode = (e.target as HTMLInputElement).checked;
               console.log(`Setting OSSM stroker mode to ${strokerMode}`);
               ossm.strokerMode = strokerMode;
+              if (strokerMode) {
+                //adjust stroke to match depth
+                const derivedDepth = Math.round((ossm.controls["stroke"].value / 2) + 50);
+                ossm.setControl("depth", derivedDepth);
+              } else {
+                ossm.setControl("depth", 10); //back to default for safety
+              }
           }}/> Stroker Mode (keeps stroke centered within its range)
         </div>
 
@@ -605,6 +637,28 @@
         input[type="range"].max-range::-moz-range-thumb {
             height: 18px;
             background: #555 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="18"><text x="50%" y="13" font-family="Arial" font-size="10" fill="white" text-anchor="middle">max</text></svg>') center/contain no-repeat;
+        }
+
+        /* Pattern numbers overlay */
+        .pattern-numbers {
+            position: relative;
+            width: calc(100% - 40px);
+            height: 20px;
+            margin-left: 20px;
+            margin-top: -38px;
+            margin-bottom: 30px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .pattern-number {
+            position: absolute;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #aaa;
+            font-weight: bold;
+            pointer-events: none;
+            user-select: none;
         }
     }
 }

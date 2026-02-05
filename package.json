@@ -1,7 +1,7 @@
 {
   "name": "OSSMPossum",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -34,6 +34,7 @@
     "@capacitor/ios": "^8.0.2",
     "buffer": "^6.0.3",
     "buttplug": "0.13.2",
+    "coi-serviceworker": "^0.1.7",
     "events": "^3.3.0"
   }
 }

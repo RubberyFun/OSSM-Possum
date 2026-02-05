@@ -25,6 +25,11 @@ export default defineConfig({
     }
   },
   build: {
+    rollupOptions: {
+      input: {
+        main: './main.html',
+      },
+    },
     emptyOutDir: false, // This line prevents clearing the output directory
     outDir: './public', // Output to public directory
   },
@@ -32,8 +37,32 @@ export default defineConfig({
     svelte(), 
     basicSsl(),  // Enable HTTPS for development
     viteSingleFile(),
+    {
+      name: 'rewrite-root',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === '/') {
+            req.url = '/main.html';
+          }
+          next();
+        });
+      }
+    },
+    {
+      name: 'rename-index',
+      closeBundle: async () => {
+        const fs = await import('fs');
+        const path = await import('path');
+        const mainPath = path.resolve('./public/main.html');
+        const indexPath = path.resolve('./public/index.html');
+        if (fs.existsSync(mainPath)) {
+          fs.renameSync(mainPath, indexPath);
+        }
+      }
+    }
   ],
   server: {
+    open: '/',
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin",
       "Cross-Origin-Embedder-Policy": "require-corp",
