@@ -381,7 +381,7 @@
               } else {
                 ossm.setControl("depth", 10); //back to default for safety
               }
-          }}/> Stroker Mode (keeps stroke centered within its range)
+          }}/> Stroker Mode (keeps limits centered for a piston)
         </div>
 
       </div>
@@ -390,9 +390,9 @@
     {:else}
     <div  style="font-size: small;">
       <p>This supports <a target="_blank" href="https://www.researchanddesire.com/pages/ossm">OSSM devices</a> with a stock firmware from 2026 or newer.</p>
-      <p>If your OSSM firmware is older you can easily upgrade it using <a href="https://dashboard.researchanddesire.com/app/tools/web-flasher">their web flashing tool</a>.</p>
+      <p>If your OSSM firmware is older or custom you can easily upgrade it using <a href="https://dashboard.researchanddesire.com/app/tools/web-flasher">their web flashing tool</a>.</p>
       {#if (!EOMembedded)}
-        <p>Coded with love and hedonism by <a href="https://rubberyfun.com/">Claus Macher</a>.  Have fun!</p>
+        <p>Coded with love and hedonism by <a href="http://rubberyfun.com/">Claus Macher</a>.  Have fun!</p>
       {/if}
       <p></p>
     </div>
@@ -489,6 +489,7 @@
     /* end larger screens */
     .device-disconnect {  
       color: #900;
+      background-color: #cfc2c2;
       font-weight: bold;
       float: right; 
       width: 4.8rem;
