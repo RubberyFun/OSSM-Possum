@@ -308,14 +308,37 @@
                 max={control[1].limitMax ?? control[1].max} 
                 value={control[1].value}
                 style="background: hsl({controlIndex * (360 / Object.keys(ossm.controls).length)}, 30%, 50%);"
-                bind:this={control[1].sliderElement} oninput={(e) => {
-                  //debounce this
-                  const newValue = parseInt((e.target as HTMLInputElement)?.value ?? "0");
-                  ossm.setControl(
-                    control[0], 
-                    parseInt((e.target as HTMLInputElement)?.value ?? "0")
-                    //Math.round((newValue - control[1].min) / (control[1].max - control[1].min) * ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min))
-                  );
+                bind:this={control[1].sliderElement} 
+                onpointerdown={(e) => {
+                  const input = e.target as HTMLInputElement;
+                  const rect = input.getBoundingClientRect();
+                  const pointerX = e.clientX - rect.left;
+                  const percentage = pointerX / rect.width;
+                  const min = parseFloat(input.min);
+                  const max = parseFloat(input.max);
+                  const pointerValue = percentage * (max - min) + min;
+                  const currentValue = parseFloat(input.value);
+                  
+                  // Prevent jump if pointer is far from current thumb position
+                  const threshold = (max - min) * 0.1;
+                  if (control[0] !== "pattern" && Math.abs(pointerValue - currentValue) > threshold) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                  }
+                }}
+                oninput={(e) => {
+                  const input = e.target as HTMLInputElement;
+                  const newValue = parseInt(input.value);
+                  
+                  // Check if this was triggered by a click far from thumb (except for pattern which allows jumps)
+                  if (control[0] !== "pattern" && Math.abs(newValue - control[1].value) > (control[1].limitMax! - control[1].limitMin!) * 0.1) {
+                    // Reset to previous value instead of jumping
+                    input.value = control[1].value.toString();
+                    return;
+                  }
+                  
+                  ossm.setControl(control[0], newValue);
                 }}/>
             {#if control[0] === "pattern"}
               <div class="pattern-numbers">
