@@ -16,7 +16,7 @@
 
 1. Get it from the Google Play store.  This is WIP - estimated public launch will be 2/14/2026 due to Google red tape. If you want to test you can find me on [the Kinky Makers discord](https://discord.com/channels/559409652425687041/1286888639501959280/threads/1469058487123443888) and I'll add you to the testing group. Then you can [get the test version](https://play.google.com/store/apps/details?id=com.rubberyfun.ossmpossum.app) (but the link is dead unless you give me your email)
 
-1. [Get it from the Apple App Store](https://apps.apple.com/us/app/ossm-possum/id6758223317)...  Apple is more straightforward to work with: they just want money. (it's $100/yr to launch apps and you can't do it without having a newer mac).
+1. [Get it from the Apple App Store from this link](https://apps.apple.com/us/app/ossm-possum/id6758223317) or by searching for "ossm".  Apple is more straightforward to work with: they just want money. (it's $100/yr to launch apps and you can't do it without having a newer mac).
 
 1. Install the APK directly on your Android device.  You can easily look up how to do this, I won't go into it here.  The APK file is [in the releases](https://github.com/RubberyFun/OSSM-Possum/releases/tag/1.3).
 
