@@ -1,0 +1,22 @@
+name: Upload Release Asset
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to write to the release
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Upload Release Asset
+      id: upload-asset
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          android/app/build/outputs/apk/release/*.apk
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Automatically provided secret

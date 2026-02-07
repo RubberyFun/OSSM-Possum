@@ -1,5 +1,6 @@
 <script lang="ts">
   import { BleClient } from '@capacitor-community/bluetooth-le';
+  import pkg from '../package.json';
 
   let isWriting = false;
 
@@ -174,6 +175,8 @@
         console.log(`Device ${deviceId} disconnected`);
         disconnectDevice(newOSSM);
       });
+
+      
       
       newOSSM.conn_status = "Connected";
 
@@ -206,9 +209,36 @@
           console.log("Pattern:", pattern);
           newOSSM.patterns.push(pattern.name);
         });
-        console.log("Read patterns:", newOSSM.patterns);
       } catch (error) {
         console.error("Failed to read patterns:", error);
+      }
+
+      // Read initial state from rx_state characteristic
+      try {
+        const stateData = await BleClient.read(device.deviceId, newOSSM.service, newOSSM.rx_state);
+        const decoder = new TextDecoder();
+        const stateString = decoder.decode(stateData);
+        const stateObject = JSON.parse(stateString);
+        console.log("Initial state:", stateObject);
+        
+        // Update control values from device state
+        if (stateObject.speed !== undefined) {
+          newOSSM.controls.speed.value = stateObject.speed;
+        }
+        if (stateObject.stroke !== undefined) {
+          newOSSM.controls.stroke.value = stateObject.stroke;
+        }
+        if (stateObject.depth !== undefined) {
+          newOSSM.controls.depth.value = stateObject.depth;
+        }
+        if (stateObject.pattern !== undefined) {
+          newOSSM.controls.pattern.value = stateObject.pattern;
+        }
+        if (stateObject.sensation !== undefined) {
+          newOSSM.controls.sensation.value = stateObject.sensation;
+        }
+      } catch (error) {
+        console.error("Failed to read state:", error);
       }
 
       devices.push(newOSSM);
@@ -223,7 +253,7 @@
 
 </script>
 
-<div class="bluetooth-ossm-control">
+<div class="bluetooth-ossm-control" style="--version: '{pkg.version}';">
   {#if devices.length}
     {#each devices as ossm, deviceIndex}
       <div style="display: flex;flex-direction: row;justify-content: space-between;margin-bottom: 10px; ">
@@ -317,26 +347,42 @@
                   const min = parseFloat(input.min);
                   const max = parseFloat(input.max);
                   const pointerValue = percentage * (max - min) + min;
-                  const currentValue = parseFloat(input.value);
+                  // Use the stored control value, not the input value which might already be changed
+                  const currentValue = control[1].value;
                   
                   // Prevent jump if pointer is far from current thumb position
                   const threshold = (max - min) * 0.1;
                   if (control[0] !== "pattern" && Math.abs(pointerValue - currentValue) > threshold) {
+                    console.log(`Pointer down too far from thumb, preventing jump. Pointer value: ${pointerValue}, Current value: ${currentValue}`);
                     e.preventDefault();
                     e.stopPropagation();
                     return false;
                   }
                 }}
+                onpointerup={(e) => {
+                  console.log("Pointer up, ending drag");
+                  const input = e.target as HTMLInputElement;
+                  delete input.dataset.dragging;
+                }}
+                ontouchend={(e) => {
+                  console.log("Touch end, ending drag");
+                  const input = e.target as HTMLInputElement;
+                  delete input.dataset.dragging;
+                }}
                 oninput={(e) => {
                   const input = e.target as HTMLInputElement;
                   const newValue = parseInt(input.value);
                   
-                  // Check if this was triggered by a click far from thumb (except for pattern which allows jumps)
-                  if (control[0] !== "pattern" && Math.abs(newValue - control[1].value) > (control[1].limitMax! - control[1].limitMin!) * 0.1) {
-                    // Reset to previous value instead of jumping
+                  // For touchscreens: prevent jump if not actively dragging and jump is too large
+                  if (control[0] !== "pattern" && !input.dataset.dragging && 
+                      Math.abs(newValue - control[1].value) > (control[1].limitMax! - control[1].limitMin!) * 0.1) {
+                    console.log(`Jump prevented. New value: ${newValue}, Current value: ${control[1].value}`);
                     input.value = control[1].value.toString();
                     return;
                   }
+                  
+                  // Mark that we're now dragging after first valid input
+                  input.dataset.dragging = "true";
                   
                   ossm.setControl(control[0], newValue);
                 }}/>
@@ -346,45 +392,43 @@
                   <span class="pattern-number" style="left: {(num - control[1].min) / (control[1].max - control[1].min) * 100}%;">{num + 1}</span>
                 {/each}
               </div>
-            {/if}
-            <div class="slider">
-                <div id={`control-${deviceIndex}-${control[0]}-range-slider`} class="range-slider"></div>
-            </div>
-
-            <div class="range-input">
-                <input id={`control-${deviceIndex}-${control[0]}-min`} type="range" class="min-range"  step="1" 
+            {:else}
+              <div class="slider">
+                  <div id={`control-${deviceIndex}-${control[0]}-range-slider`} class="range-slider"></div>
+              </div>
+              <div class="range-input">
+                  <input id={`control-${deviceIndex}-${control[0]}-min`} type="range" class="min-range"  step="1" 
+                    min={control[1].min} 
+                    max={control[1].max} 
+                    value={control[1].limitMin}
+                    oninput={(e) => {
+                      const originalValue = control[1].limitMin ?? control[1].min;
+                      control[1].limitMin = parseInt((e.target as HTMLInputElement)?.value ?? "0");
+                      const rangeInput = document.querySelector(`#control-${deviceIndex}-${control[0]}-range-slider`) as HTMLInputElement;
+                      rangeInput.style.left = `${control[1].limitMin / (control[1].max) * 100}%`;
+                      const newSpeed = ((control[1].value - originalValue) / ((control[1].limitMax ?? control[1].max ) - originalValue)) *
+                        ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
+                      ossm.setControl(control[0], Math.round(newSpeed));
+                    }} 
+                  />
+                  <input id={`control-${deviceIndex}-${control[0]}-max`} type="range" class="max-range"  step="1" 
                   min={control[1].min} 
                   max={control[1].max} 
-                  value={control[1].limitMin}
+                  value={control[1].limitMax} 
                   oninput={(e) => {
-                    const originalValue = control[1].limitMin ?? control[1].min;
-                    control[1].limitMin = parseInt((e.target as HTMLInputElement)?.value ?? "0");
-                    const rangeInput = document.querySelector(`#control-${deviceIndex}-${control[0]}-range-slider`) as HTMLInputElement;
-                    rangeInput.style.left = `${control[1].limitMin / (control[1].max) * 100}%`;
-                    const newSpeed = ((control[1].value - originalValue) / ((control[1].limitMax ?? control[1].max ) - originalValue)) *
-                      ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
-                    ossm.setControl(control[0], Math.round(newSpeed));
-                  }} 
-                />
-                <input id={`control-${deviceIndex}-${control[0]}-max`} type="range" class="max-range"  step="1" 
-                min={control[1].min} 
-                max={control[1].max} 
-                value={control[1].limitMax} 
-                oninput={(e) => {
-                    const originalValue = control[1].limitMax ?? control[1].max;
-                    control[1].limitMax = parseInt((e.target as HTMLInputElement)?.value ?? "255");
-                    const rangeInput = document.querySelector(`#control-${deviceIndex}-${control[0]}-range-slider`) as HTMLInputElement;
-                    if (rangeInput) {
-                      rangeInput.style.right = `${(control[1].max - (control[1].limitMax ?? control[1].max)) / control[1].max * 100}%`;
-                    }
-                    const newSpeed = ((control[1].value - (control[1].limitMin ?? control[1].min)) / ((control[1].limitMax ?? control[1].max ) - originalValue)) *
-                      ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
-                    ossm.setControl(control[0], Math.round(newSpeed));
-                  }} 
-                />
-            </div>
-
-
+                      const originalValue = control[1].limitMax ?? control[1].max;
+                      control[1].limitMax = parseInt((e.target as HTMLInputElement)?.value ?? "255");
+                      const rangeInput = document.querySelector(`#control-${deviceIndex}-${control[0]}-range-slider`) as HTMLInputElement;
+                      if (rangeInput) {
+                        rangeInput.style.right = `${(control[1].max - (control[1].limitMax ?? control[1].max)) / control[1].max * 100}%`;
+                      }
+                      const newSpeed = ((control[1].value - (control[1].limitMin ?? control[1].min)) / (originalValue - (control[1].limitMin ?? control[1].min))) *
+                        ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
+                      ossm.setControl(control[0], Math.round(newSpeed));
+                    }} 
+                  />
+              </div>
+            {/if}
           </div>
         {/if}
       {/each}
@@ -453,7 +497,8 @@
         position: relative;
 
       &::before {
-      content: '';
+      content: var(--version);
+      color: #666;
       position: absolute;
       top: -46px;
       left: 40%;
@@ -511,8 +556,8 @@
 
     /* end larger screens */
     .device-disconnect {  
-      color: #900;
-      background-color: #cfc2c2;
+      color: #a99;
+      background-color: transparent;
       font-weight: bold;
       float: right; 
       width: 4.8rem;

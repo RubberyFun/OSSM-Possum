@@ -31,7 +31,7 @@ export default defineConfig({
       },
     },
     emptyOutDir: false, // This line prevents clearing the output directory
-    outDir: './public', // Output to public directory
+    outDir: './dist', // Output to dist directory
   },
   plugins: [
     svelte(), 
@@ -53,8 +53,8 @@ export default defineConfig({
       closeBundle: async () => {
         const fs = await import('fs');
         const path = await import('path');
-        const mainPath = path.resolve('./public/main.html');
-        const indexPath = path.resolve('./public/index.html');
+        const mainPath = path.resolve('./dist/main.html');
+        const indexPath = path.resolve('./dist/index.html');
         if (fs.existsSync(mainPath)) {
           fs.renameSync(mainPath, indexPath);
         }

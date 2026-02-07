@@ -1,5 +1,9 @@
 apply plugin: 'com.android.application'
 
+def keystorePropertiesFile = rootProject.file("../.local/keystore.properties")
+def keystoreProperties = new Properties()
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+
 android {
     namespace = "com.rubberyfun.ossmpossum.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +11,8 @@ android {
         applicationId "com.rubberyfun.ossmpossum.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
-        versionName "1.4"
+        versionCode 7
+        versionName "1.5.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -20,10 +24,45 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+    }
+    
+    signingConfigs {
+        config {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
+    }    // Set base archive name for both APKs and AABs
+    setProperty("archivesBaseName", "ossm-possum-${defaultConfig.versionName}")
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "ossm-possum-${variant.versionName}.${variant.packageApplication ? 'apk' : 'aab'}"
         }
     }
 }
-
+// Rename AAB in the release directory after bundle tasks complete
+tasks.whenTaskAdded { task ->
+    if (task.name == 'bundleRelease') {
+        task.doLast {
+            def releaseDir = file("$projectDir/release")
+            if (releaseDir.exists()) {
+                releaseDir.listFiles().each { file ->
+                    if (file.name.endsWith('.aab')) {
+                        def version = android.defaultConfig.versionName
+                        def newName = "ossm-possum-${version}.aab"
+                        def newFile = new File(releaseDir, newName)
+                        file.renameTo(newFile)
+                        println "Renamed ${file.name} to ${newName}"
+                    }
+                }
+            }
+        }
+    }
+}
 repositories {
     flatDir{
         dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'

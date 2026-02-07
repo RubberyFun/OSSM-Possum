@@ -1,2 +1,15 @@
 /build/*
 !/build/.npmkeep
+!/build/outputs/
+/build/outputs/*
+!/build/outputs/apk/
+/build/outputs/apk/*
+!/build/outputs/apk/release/
+/build/outputs/apk/release/*
+!/build/outputs/apk/release/*.apk
+
+# !/build/outputs/bundle/
+# /build/outputs/bundle/*
+# !/build/outputs/bundle/release/
+# /build/outputs/bundle/release/*
+# !/build/outputs/bundle/release/*.aab
