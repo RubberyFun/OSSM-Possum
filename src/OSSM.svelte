@@ -61,7 +61,10 @@
       ["Stop'n'Go", "Pauses between strokes; sensation adjusts length"],
       ["Insist", "Modifies length, maintains speed; sensation influences direction"],
       ["JackHammer", "DANGEROUS WITH SPEED!  Sensation jiggles the stroke as it moves in."],
-      ["StrokeNibbler", "DANGEROUS WITH SPEED!  Sensation jiggles the stroke in both directions."]
+      ["StrokeNibbler", "DANGEROUS WITH SPEED!  Sensation jiggles the stroke in both directions"],
+      ["Struggle", "(EXPERIMENTAL!) Sensation slows down the end of the stroke"],
+      ["Knot", "(EXPERIMENTAL!) Sensation pauses the end of the stroke after a slow down"],
+      ["Slammin", "(EXPERIMENTAL!) Sensation slams then pauses the end of the stroke"]
     ];
 
 

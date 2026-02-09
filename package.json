@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --outDir ./dist && cp ./dist/main.html ./public/index.html",
+    "build": "vite build --outDir ./dist && cp ./dist/index.html ./public/index.html",
     "cbuild": "vite build && cp ./public/* ./dist/* -r",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.app.json && tsc -p tsconfig.node.json",
