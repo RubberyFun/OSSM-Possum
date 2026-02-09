@@ -26,7 +26,7 @@ jobs:
 
       - name: Check if package.json version has been updated and create a release
         id: release_action
-        uses: justincy/github-action-npm-release@v1.2.0
+        uses: justincy/github-action-npm-release@v2.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
