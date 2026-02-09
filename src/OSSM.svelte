@@ -59,7 +59,9 @@
       ["Half'n'Half", "Full and half depth strokes alternate; sensation affects speed"],
       ["Deeper", "Stroke depth increases per cycle; sensation sets count"],
       ["Stop'n'Go", "Pauses between strokes; sensation adjusts length"],
-      ["Insist", "Modifies length, maintains speed; sensation influences direction"]
+      ["Insist", "Modifies length, maintains speed; sensation influences direction"],
+      ["JackHammer", "DANGEROUS WITH SPEED!  Sensation jiggles the stroke as it moves in."],
+      ["StrokeNibbler", "DANGEROUS WITH SPEED!  Sensation jiggles the stroke in both directions."]
     ];
 
 
