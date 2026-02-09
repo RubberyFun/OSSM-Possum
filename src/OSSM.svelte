@@ -304,7 +304,7 @@
                   {#if (control[0] === "pattern")}
                     {console.log("Pattern control value:", control[1].value,$state.snapshot(ossm.patterns))}
                     Pattern: <span style="font-weight: normal;">{$state.snapshot(ossm.patterns)[control[1].value] ?? control[1].value}</span>
-                    <div class="minMaxText"  style="font-weight: normal;">{ossm.patternDescriptions[control[1].value]?.[1] ?? "(Experimental!) A custom pattern"}</div>
+                    <div class="minMaxText"  style="font-weight: normal;">{ossm.patternDescriptions[control[1].value]?.[1] ?? "(EXPERIMENTAL!) A custom pattern"}</div>
                   {:else}
                     {control[0].charAt(0).toUpperCase() + control[0].slice(1)}: {control[1].value} 
                     <span class="minMaxText">(Min: {control[1].limitMin}, Max: {control[1].limitMax})</span>
