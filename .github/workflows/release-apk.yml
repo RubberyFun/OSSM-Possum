@@ -1,22 +1,47 @@
-name: Upload Release Asset
+name: Build and Release on Version Change
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
 
 jobs:
-  build-and-upload:
+  release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Required to write to the release
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Upload Release Asset
-      id: upload-asset
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          android/app/build/outputs/apk/release/*.apk
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Automatically provided secret
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fetch all history for version comparison
+
+      - name: Set up Node.js (if building a Node.js project)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies and build project
+        run: |
+          npm install
+          npm run build # this command should generate files in your 'dist' directory
+
+      - name: Check if package.json version has been updated and create a release
+        id: release_action
+        uses: justincy/github-action-npm-release@v1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ steps.release_action.outputs.version }}" # the action handles the version check logic
+          release_name: "Release v${{ steps.release_action.outputs.version }}"
+          body: "Automated release based on package.json version."
+          draft: false
+          prerelease: false
+
+      - name: Upload release assets
+        if: ${{ steps.release_action.outputs.released == 'true' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.release_action.outputs.upload_url }}
+          asset_path: ./android/app/build/outputs/apk/release/* # specify your build output directory and files
+          asset_name: ossm-possum-${{ steps.release_action.outputs.version }}.apk # you might need to zip the directory first
