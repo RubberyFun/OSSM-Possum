@@ -44,4 +44,5 @@ jobs:
         with:
           upload_url: ${{ steps.release_action.outputs.upload_url }}
           asset_path: ./android/app/build/outputs/apk/release/* # specify your build output directory and files
+          asset_content_type: application/vnd.android.package-archive
           asset_name: ossm-possum-${{ steps.release_action.outputs.version }}.apk # you might need to zip the directory first
