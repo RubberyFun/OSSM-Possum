@@ -53,18 +53,18 @@
     isWriting = $state(false);
     unpause_speed = 1;
     patternDescriptions = [
-      ["Simple Stroke", "Acceleration, coasting, & deceleration are evenly balanced"],
-      ["Teasing Pounding", "Sensation increases speed in one direction, balanced in the middle"],
-      ["Robo Stroke", "Sensation varies acceleration; from robotic to gradual"],
-      ["Half'n'Half", "Full and half depth strokes alternate; sensation affects speed"],
-      ["Deeper", "Stroke depth increases per cycle; sensation sets count"],
-      ["Stop'n'Go", "Pauses between strokes; sensation adjusts length"],
-      ["Insist", "Modifies length, maintains speed; sensation influences direction"],
-      ["JackHammer", "DANGEROUS WITH SPEED!  Sensation jiggles the stroke as it moves in."],
-      ["StrokeNibbler", "DANGEROUS WITH SPEED!  Sensation jiggles the stroke in both directions"],
-      ["Struggle", "(EXPERIMENTAL!) Sensation slows down the end of the stroke"],
-      ["Knot", "(EXPERIMENTAL!) Sensation pauses the end of the stroke after a slow down"],
-      ["Slammin", "(EXPERIMENTAL!) Sensation slams then pauses the end of the stroke"]
+      ["Simple Stroke",     "Acceleration, coasting, & deceleration are evenly balanced"],
+      ["Teasing Pounding",  "Sensation increases speed in one direction, balanced in the middle"],
+      ["Robo Stroke",       "Sensation varies acceleration; from robotic to gradual"],
+      ["Half'n'Half",       "Full and half depth strokes alternate; sensation affects speed"],
+      ["Deeper",            "Stroke depth increases per cycle; sensation sets count"],
+      ["Stop'n'Go",         "Pauses between strokes; sensation adjusts length"],
+      ["Insist",            "Modifies length, maintains speed; sensation influences direction"],
+      ["JackHammer",        "DANGEROUS WITH SPEED!  Sensation jiggles the stroke as it moves in."],
+      ["StrokeNibbler",     "DANGEROUS WITH SPEED!  Sensation jiggles the stroke in both directions"],
+      ["Struggle",          "(EXPERIMENTAL!) Sensation slows down the end of the stroke"],
+      ["Knot",              "(EXPERIMENTAL!) Sensation pauses the end of the stroke after a slow down"],
+      ["Slammin",           "(EXPERIMENTAL!) Sensation slams then pauses the end of the stroke"]
     ];
 
 
@@ -214,6 +214,8 @@
           console.log("Pattern:", pattern);
           newOSSM.patterns.push(pattern.name);
         });
+        newOSSM.controls["pattern"].max = newOSSM.patterns.length - 1;
+        newOSSM.controls["pattern"].limitMax = newOSSM.patterns.length - 1;
       } catch (error) {
         console.error("Failed to read patterns:", error);
       }
@@ -297,10 +299,7 @@
         {#if (!(control[0] === "depth" && ossm.strokerMode) && 
               !(control[0] === "sensation" && ossm.patterns[ossm.controls["pattern"].value] === "Simple Stroke"))}
 
-          <div class="device-sliders" title={control[1].description ?? ""}>
-            <div style="display: flex;flex-direction: row;justify-content: space-between" >
-
-                <div style="font-weight: bold; margin-bottom: 1px; white-space: nowrap;">
+                <div class="slider-label">
                   {#if (control[0] === "pattern")}
                     {console.log("Pattern control value:", control[1].value,$state.snapshot(ossm.patterns))}
                     Pattern: <span style="font-weight: normal;">{$state.snapshot(ossm.patterns)[control[1].value] ?? control[1].value}</span>
@@ -332,6 +331,10 @@
                       }}/>
                   </div>
                 {/if}
+                          <div class="device-sliders" title={control[1].description ?? ""}>
+
+            <div style="display: flex;flex-direction: row;justify-content: space-between" >
+
             </div>
 
             <!-- svelte-ignore binding_property_non_reactive -->
@@ -514,6 +517,7 @@
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
+      text-indent: 150px;
     }
 
       &::after {
@@ -529,29 +533,16 @@
       background-repeat: no-repeat;
       background-position: center;
     }
-    @media screen and (max-width: 800px) {
-      &::after {
-              bottom: -36px;
-      }
-    }
 
-    /* specific styles for mobile and smaller screens */
-    @media screen and (max-width: 600px) {
-      &::after {
-              bottom: -34px;
-      }
-      .minMaxText {
-        display: none;
-      }
-      .invertedText {
-        white-space: nowrap;
-        font-size: xx-small;
-      }
-    }
+        /* larger screens */
 
-    /* larger screens */
+    .slider-label {
+      font-weight: bold;
+      margin-bottom: 1px;
+      white-space: nowrap;
+    }
     .minMaxText {
-      font-size: small;
+      font-size: large;
       color: #ccc;
     }
     .invertedText {
@@ -559,7 +550,6 @@
       font-size: small;
     }
 
-    /* end larger screens */
     .device-disconnect {  
       color: #a99;
       background-color: transparent;
@@ -587,6 +577,7 @@
         flex-direction: column;
         margin-bottom: 20px;
         gap: 0.5rem;
+        margin-top: -.5rem;
 
         /* Remove Arrows/Spinners */
         input::-webkit-outer-spin-button,
@@ -735,5 +726,46 @@
             user-select: none;
         }
     }
+
+    @media screen and (max-width: 800px) {
+      &::after {
+              bottom: -36px;
+      }
+      .minMaxText {
+        font-size: small;
+      }
+      .slider-label {
+        font-weight: bold;
+        font-size: small;
+        margin-bottom: 0px;
+      }
+
+    }
+
+    /* specific styles for mobile and smaller screens */
+    @media screen and (max-width: 500px) {
+      &::after {
+              bottom: -34px;
+      }
+
+      .slider-label {
+        font-size: x-small;
+        margin-bottom: 0px;
+      }
+
+      .minMaxText {
+        font-size: xx-small;
+      }
+      .invertedText {
+        white-space: nowrap;
+        font-size: xx-small;
+      }
+
+        .device-sliders {
+          margin-bottom: 0px;
+          gap: 0.5rem;
+        }
+    }
+
 }
 </style>
