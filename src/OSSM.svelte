@@ -634,7 +634,7 @@
         width: 100%;
         height: 6px;
         position: relative;
-        background: #444;
+        background: #333;
         border-radius: 5px;
         }
         .slider .range-slider {
@@ -643,7 +643,7 @@
             right: 0%;
             position: absolute;
             border-radius: 20px;
-            background: #99c8ff;
+            background: #666;
         }    
         .range-input {
         position: relative;
@@ -666,7 +666,7 @@
             height: 40px;
             width: 40px;
             border-radius: 20px;
-            background: #555;
+            background: #333;
             pointer-events: auto;
             -webkit-appearance: none;
             position: relative;
@@ -677,7 +677,7 @@
             height: 40px;
             width: 40px;
             border-radius: 20px;
-            background: #555;
+            background: #333;
             pointer-events: auto;
             border: none;
         }
@@ -685,23 +685,23 @@
         /* Min range thumb - shows "min" text */
         input[type="range"].min-range::-webkit-slider-thumb {
             height: 18px;
-            background: #555 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="18"><text x="50%" y="13" font-family="Arial" font-size="10" fill="white" text-anchor="middle">min</text></svg>') center/contain no-repeat;
+            background: #444 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="18"><text x="50%" y="13" font-family="Arial" font-size="10" fill="lightgray" text-anchor="middle">min</text></svg>') center/contain no-repeat;
         }
 
         input[type="range"].min-range::-moz-range-thumb {
             height: 18px;
-            background: #555 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="18"><text x="50%" y="13" font-family="Arial" font-size="10" fill="white" text-anchor="middle">min</text></svg>') center/contain no-repeat;
+            background: #444 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="18"><text x="50%" y="13" font-family="Arial" font-size="10" fill="lightgray" text-anchor="middle">min</text></svg>') center/contain no-repeat;
         }
 
         /* Max range thumb - shows "max" text */
         input[type="range"].max-range::-webkit-slider-thumb {
             height: 18px;
-            background: #555 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="18"><text x="50%" y="13" font-family="Arial" font-size="10" fill="white" text-anchor="middle">max</text></svg>') center/contain no-repeat;
+            background: #444 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="18"><text x="50%" y="13" font-family="Arial" font-size="10" fill="lightgray" text-anchor="middle">max</text></svg>') center/contain no-repeat;
         }
 
         input[type="range"].max-range::-moz-range-thumb {
             height: 18px;
-            background: #555 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="18"><text x="50%" y="13" font-family="Arial" font-size="10" fill="white" text-anchor="middle">max</text></svg>') center/contain no-repeat;
+            background: #444 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="18"><text x="50%" y="13" font-family="Arial" font-size="10" fill="lightgray" text-anchor="middle">max</text></svg>') center/contain no-repeat;
         }
 
         /* Pattern numbers overlay */

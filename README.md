@@ -3,7 +3,7 @@
 #### This is a bluetooth remote app for the stock firmware of the [Kinky Makers OSSM](https://www.researchanddesire.com/pages/ossm) that runs as native iOS or Android app, as a web page, or as an offline PWA.
 
 <p align="center">
-  <img src="public/screenshot.jpg" alt="Screenshot">
+  <img src="public/Screenshot.png" alt="Screenshot">
 </p>
 
 ## Setup
@@ -29,6 +29,22 @@
 
 [Link to the demonstration video](https://rubberyfun.github.io/OSSM-Possum/public/demo1b.mp4)
 
+## Adding custom patterns
+R+D doesn't officially support patterns besides the 7 stock ones.  Custom patterns may not be well tested or are known to have potentially dangerous issues (Looking at you Jackhammer an Stroke Nibbler).  **OSSM Possum will happily load whatever patterns you have on your device.**  If it's a pattern I haven't seen before it will show the name but the only description will be "A custom pattern".  I am not endorsing using custom patterns, just supporting the possibility. They wouldn't exist if there weren't some fun to be had.  Use caution.  If you want your pattern description added you can reach me at the [KM discord](https://discord.com/channels/559409652425687041/1469058487123443888).  
+
+#### Instructions for adding patterns:
+1. Add the pattern code to  lib/StrokeEngine/src/pattern.h
+1. Add the new names as enUs_StrokeEngineNames variables to src/constants/copy/en-us.h after line 65
+1. Add those variables at the end of the same file to the StrokeEngineNames object
+1. Increase the size of the StrokeEngineNames at the end of src/structs/LanguageStruct.h
+1. Build and upload the modified code to your OSSM device  
+
+**If the above instructions don't make sense to you then you probably shouldn't be doing this yourself!**
+
+## Stroker Mode
+I've also developed [OSSM Job: a quick conversion kit to turn your OSSM into a pneumatic stroker](https://rubberyfun.github.io/OSSM-Job) like the Venus 2000, AutoBlow, Tremblr, etc...  To use the OSSM as a stroker it's best to keep the stroke centered within it's range.  To facilitate this I've added a checkbox at the bottom of this app to enable Stroker Mode.  Do no use stroker mode with penetrative toys or physical strokers or you're gonna have a bad time.
+
+
 ## Quirks
 
 - This only supports OSSM devices with a stock firmware from 2026 or newer. If you bought your OSSM before that you can easily upgrade it using their [web flashing tool](https://dashboard.researchanddesire.com/app/tools/web-flasher).
@@ -36,6 +52,8 @@
 - I didn't include simple penetration mode.  It starts up in the "Simple Stroke" pattern already...They are identical so I just don't see the need.
 
 - If you use a browser and not the app: Safari and Firefox are not onboard with web pages having access to bluetooth...and they never will be for better or worse.  You need Chrome for the web version on Mac or PC...oh and Apple has a stranglehold on iOS chrome, so it won't work for iPhones/iPads at all besides the app.
+
+
 
 ## Planned features
 
