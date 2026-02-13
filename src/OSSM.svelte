@@ -11,7 +11,6 @@
     max: number;
     mode: string; // "manual", "pleasure", "arousal", "pressure", "denied" corresponding to EOM states
     inverted?: boolean;  // EOM function: invert the control
-    sliderElement?: HTMLInputElement;
     limitMin?: number;  // EOM function: limit slider control
     limitMax?: number;  // EOM function: limit slider control
     description?: string;
@@ -119,7 +118,20 @@
       try {
         const encoder = new TextEncoder();
         this.isWriting = true;
-        const message = "set:" + name + ":" + value;
+        let message = ""
+        if (name !== "pattern") {
+          message = "set:" + name + ":" + value;
+        } else {
+          //patterns are a special case where we send the idx but also update the pattern control value to the index of the pattern for better UX
+          const pattern = $state.snapshot(this.patterns)[value];
+          if (pattern) {
+            console.log(`Setting pattern to '${pattern.name}' with idx ${pattern.idx}`);
+            message = `set:${name}:${pattern.idx}`;
+          } else {
+            console.warn(`Pattern with idx ${value} not found, sending raw value`);
+            message = `set:${name}:${value}`;
+          }
+        }
         const dataView = new DataView(encoder.encode(message).buffer);
         await BleClient.write(this.deviceId, this.service, this.tx, dataView);
         if (name === "speed" && value === 0) {
@@ -223,9 +235,10 @@
         const decoder = new TextDecoder();
         const patternsString = decoder.decode(patternsData);
         const patternsObject = JSON.parse(patternsString);
+        let indexFallback = 0;
         patternsObject.forEach((pattern: any) => {
           console.log("Pattern:", pattern);
-          newOSSM.patterns.push({ name: pattern.name, idx: pattern.idx });
+          newOSSM.patterns.push({ name: pattern.name, idx: pattern.idx ?? indexFallback++ });
         });
         newOSSM.controls["pattern"].max = newOSSM.patterns.length - 1;
         newOSSM.controls["pattern"].limitMax = newOSSM.patterns.length - 1;
@@ -308,14 +321,13 @@
         </div>
       </div>
 
-      {#each Object.entries(ossm.controls) as control, controlIndex}
+      {#each Object.entries($state.snapshot(ossm.controls)) as control, controlIndex}
         {#if (!(control[0] === "depth" && ossm.strokerMode) && 
               !(control[0] === "sensation" && ossm.patterns[ossm.controls["pattern"].value].name === "Simple Stroke"))}
 
                 <div class="slider-label">
                   {#if (control[0] === "pattern")}
-                    {console.log("Pattern control value:", control[1].value,$state.snapshot(ossm.patterns))}
-                    Pattern: <span style="font-weight: normal;">{$state.snapshot(ossm.patterns)[control[1].value] ?? control[1].value}</span>
+                    Pattern: <span style="font-weight: normal;">{$state.snapshot(ossm.patterns)[control[1].value].name ?? control[1].value}</span>
                     <div class="minMaxText"  style="font-weight: normal;">{ossm.patternDescriptions[control[1].value]?.[1] ?? "(EXPERIMENTAL!) A custom pattern"}</div>
                   {:else}
                     {control[0].charAt(0).toUpperCase() + control[0].slice(1)}: {control[1].value} 
@@ -359,7 +371,6 @@
                 max={control[1].limitMax ?? control[1].max} 
                 value={control[1].value}
                 style="background: hsl({controlIndex * (360 / Object.keys(ossm.controls).length)}, 30%, 50%);"
-                bind:this={control[1].sliderElement} 
                 onpointerdown={(e) => {
                   const input = e.target as HTMLInputElement;
                   const rect = input.getBoundingClientRect();
@@ -389,7 +400,7 @@
                 }}
                 oninput={(e) => {
                   const input = e.target as HTMLInputElement;
-                  const newValue = control[0] !== "pattern" ? parseInt(input.value) : ossm.patterns[parseInt(input.value)].idx;
+                  const newValue = parseInt(input.value);
                   
                   // For touchscreens: prevent jump if not actively dragging and jump is too large
                   if (control[0] !== "pattern" && !input.dataset.dragging && 
