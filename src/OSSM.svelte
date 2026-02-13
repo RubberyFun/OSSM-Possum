@@ -17,6 +17,11 @@
     description?: string;
   }
 
+  interface OSSMPattern {
+    name: string;
+    idx: number;
+  }
+
   interface OSSMdevice {
     name: string;
     deviceId: string | null;
@@ -27,7 +32,7 @@
     rx_patterns: string;
     conn_status: string;
     unpause_speed: number;
-    patterns: string[];
+    patterns: OSSMPattern[];
     patternDescriptions: string[][];
     strokerMode: boolean;
     controls: Record<string, OSSMcontrol>;
@@ -48,7 +53,7 @@
     tx_knob = "";
     strokerMode = $state(false);
     conn_status = $state("Disconnected");
-    patterns = $state<string[]>([]);
+    patterns = $state<OSSMPattern[]>([]);
     controls = $state<Record<string, OSSMcontrol>>({});
     isWriting = $state(false);
     unpause_speed = 1;
@@ -66,6 +71,14 @@
       ["Knot",              "(EXPERIMENTAL!) Sensation pauses the end of the stroke after a slow down"],
       ["Slammin",           "(EXPERIMENTAL!) Sensation slams then pauses the end of the stroke"]
     ];
+
+    getPatternByIdx(patterns: OSSMPattern[], idx: number): OSSMPattern | undefined {
+      return patterns.find((pattern) => pattern.idx === idx);
+    }
+
+    getPatternIndexByIdx(patterns: OSSMPattern[], idx: number): number {
+      return patterns.findIndex((pattern) => pattern.idx === idx);
+    }
 
 
     constructor() {
@@ -212,7 +225,7 @@
         const patternsObject = JSON.parse(patternsString);
         patternsObject.forEach((pattern: any) => {
           console.log("Pattern:", pattern);
-          newOSSM.patterns.push(pattern.name);
+          newOSSM.patterns.push({ name: pattern.name, idx: pattern.idx });
         });
         newOSSM.controls["pattern"].max = newOSSM.patterns.length - 1;
         newOSSM.controls["pattern"].limitMax = newOSSM.patterns.length - 1;
@@ -297,7 +310,7 @@
 
       {#each Object.entries(ossm.controls) as control, controlIndex}
         {#if (!(control[0] === "depth" && ossm.strokerMode) && 
-              !(control[0] === "sensation" && ossm.patterns[ossm.controls["pattern"].value] === "Simple Stroke"))}
+              !(control[0] === "sensation" && ossm.patterns[ossm.controls["pattern"].value].name === "Simple Stroke"))}
 
                 <div class="slider-label">
                   {#if (control[0] === "pattern")}
@@ -361,30 +374,26 @@
                   // Prevent jump if pointer is far from current thumb position
                   const threshold = (max - min) * 0.1;
                   if (control[0] !== "pattern" && Math.abs(pointerValue - currentValue) > threshold) {
-                    console.log(`Pointer down too far from thumb, preventing jump. Pointer value: ${pointerValue}, Current value: ${currentValue}`);
                     e.preventDefault();
                     e.stopPropagation();
                     return false;
                   }
                 }}
                 onpointerup={(e) => {
-                  console.log("Pointer up, ending drag");
                   const input = e.target as HTMLInputElement;
                   delete input.dataset.dragging;
                 }}
                 ontouchend={(e) => {
-                  console.log("Touch end, ending drag");
                   const input = e.target as HTMLInputElement;
                   delete input.dataset.dragging;
                 }}
                 oninput={(e) => {
                   const input = e.target as HTMLInputElement;
-                  const newValue = parseInt(input.value);
+                  const newValue = control[0] !== "pattern" ? parseInt(input.value) : ossm.patterns[parseInt(input.value)].idx;
                   
                   // For touchscreens: prevent jump if not actively dragging and jump is too large
                   if (control[0] !== "pattern" && !input.dataset.dragging && 
                       Math.abs(newValue - control[1].value) > (control[1].limitMax! - control[1].limitMin!) * 0.1) {
-                    console.log(`Jump prevented. New value: ${newValue}, Current value: ${control[1].value}`);
                     input.value = control[1].value.toString();
                     return;
                   }
@@ -414,9 +423,9 @@
                       control[1].limitMin = parseInt((e.target as HTMLInputElement)?.value ?? "0");
                       const rangeInput = document.querySelector(`#control-${deviceIndex}-${control[0]}-range-slider`) as HTMLInputElement;
                       rangeInput.style.left = `${control[1].limitMin / (control[1].max) * 100}%`;
-                      const newSpeed = ((control[1].value - originalValue) / ((control[1].limitMax ?? control[1].max ) - originalValue)) *
+                      const newValue = ((control[1].value - originalValue) / ((control[1].limitMax ?? control[1].max ) - originalValue)) *
                         ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
-                      ossm.setControl(control[0], Math.round(newSpeed));
+                      ossm.setControl(control[0], Math.round(newValue));
                     }} 
                   />
                   <input id={`control-${deviceIndex}-${control[0]}-max`} type="range" class="max-range"  step="1" 
@@ -430,9 +439,9 @@
                       if (rangeInput) {
                         rangeInput.style.right = `${(control[1].max - (control[1].limitMax ?? control[1].max)) / control[1].max * 100}%`;
                       }
-                      const newSpeed = ((control[1].value - (control[1].limitMin ?? control[1].min)) / (originalValue - (control[1].limitMin ?? control[1].min))) *
+                      const newValue = ((control[1].value - (control[1].limitMin ?? control[1].min)) / (originalValue - (control[1].limitMin ?? control[1].min))) *
                         ((control[1].limitMax ?? control[1].max) - (control[1].limitMin ?? control[1].min)) + (control[1].limitMin ?? control[1].min);
-                      ossm.setControl(control[0], Math.round(newSpeed));
+                      ossm.setControl(control[0], Math.round(newValue));
                     }} 
                   />
               </div>
