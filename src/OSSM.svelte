@@ -19,6 +19,7 @@
   interface OSSMPattern {
     name: string;
     idx: number;
+    description?: string;
   }
 
   interface OSSMdevice {
@@ -29,10 +30,10 @@
     tx_knob: string;
     rx_state: string;
     rx_patterns: string;
+    rw_pattern_descriptions: string;
     conn_status: string;
     unpause_speed: number;
     patterns: OSSMPattern[];
-    patternDescriptions: string[][];
     strokerMode: boolean;
     controls: Record<string, OSSMcontrol>;
     isWriting: boolean;
@@ -50,26 +51,13 @@
     rx_patterns = "";
     tx = "";
     tx_knob = "";
+    rw_pattern_descriptions = "";
     strokerMode = $state(false);
     conn_status = $state("Disconnected");
     patterns = $state<OSSMPattern[]>([]);
     controls = $state<Record<string, OSSMcontrol>>({});
     isWriting = $state(false);
     unpause_speed = 1;
-    patternDescriptions = [
-      ["Simple Stroke",     "Acceleration, coasting, & deceleration are evenly balanced"],
-      ["Teasing Pounding",  "Sensation increases speed in one direction, balanced in the middle"],
-      ["Robo Stroke",       "Sensation varies acceleration; from robotic to gradual"],
-      ["Half'n'Half",       "Full and half depth strokes alternate; sensation affects speed"],
-      ["Deeper",            "Stroke depth increases per cycle; sensation sets count"],
-      ["Stop'n'Go",         "Pauses between strokes; sensation adjusts length"],
-      ["Insist",            "Modifies length, maintains speed; sensation influences direction"],
-      ["JackHammer",        "DANGEROUS WITH SPEED!  Sensation jiggles the stroke as it moves in."],
-      ["StrokeNibbler",     "DANGEROUS WITH SPEED!  Sensation jiggles the stroke in both directions"],
-      ["Struggle",          "(EXPERIMENTAL!) Sensation slows down the end of the stroke"],
-      ["Knot",              "(EXPERIMENTAL!) Sensation pauses the end of the stroke after a slow down"],
-      ["Slammin",           "(EXPERIMENTAL!) Sensation slams then pauses the end of the stroke"]
-    ];
 
     getPatternByIdx(patterns: OSSMPattern[], idx: number): OSSMPattern | undefined {
       return patterns.find((pattern) => pattern.idx === idx);
@@ -86,6 +74,7 @@
       this.tx_knob = "522b443a-4f53-534d-1010-420badbabe69";
       this.rx_state = "522b443a-4f53-534d-2000-420badbabe69";
       this.rx_patterns = "522b443a-4f53-534d-3000-420badbabe69";
+      this.rw_pattern_descriptions = "522b443a-4f53-534d-3010-420badbabe69";
       this.unpause_speed = 1;
       this.controls = {
         speed: { value: 0, default: 0, min: 0, max: 100, mode: "pleasure", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how fast it goes back and forth" },
@@ -154,9 +143,10 @@
           }
         }
         if (name === "pattern") {
-          // if (this.patterns[value] === "Teasing Pounding") {
-            this.setControl("sensation", 50, true);  //lets just always reset the sensation to 50 on pattern change for safety.  
-          // }
+          this.setControl("sensation", 50, true);
+          if (this.patterns[value].description === "") {
+            fetchPatternDescription(this, $state.snapshot(this.patterns)[value]);
+          }
         }
       }
     }
@@ -173,6 +163,36 @@
   let { devices = $bindable([]), EOMembedded = false  }: Props = $props();
   
   let connectionError = $state<string | null>(null);
+
+  async function fetchPatternDescription(device: OSSMdevice, pattern: OSSMPattern | undefined): Promise<void> {
+    if (!device.deviceId || !pattern || pattern.description) {
+      return;
+    }
+
+    try {
+      console.log(`Fetching description for pattern '${pattern.name}' with idx ${pattern.idx}`);
+      const encoder = new TextEncoder();
+      await BleClient.write(
+        device.deviceId,
+        device.service,
+        device.rw_pattern_descriptions,
+        new DataView(encoder.encode(pattern.idx.toString()).buffer)
+      );
+
+      const descriptionData = await BleClient.read(
+        device.deviceId,
+        device.service,
+        device.rw_pattern_descriptions
+      );
+
+      const decoder = new TextDecoder();
+      pattern.description = decoder.decode(descriptionData);
+      device.patterns = device.patterns.map(p => p.idx === pattern.idx ? { ...p, description: pattern.description } : p);
+      console.log(`Fetched description for pattern '${pattern.name}': ${pattern.description}`, device.patterns);
+    } catch (error) {
+      console.error("Failed to read pattern description:", error);
+    }
+  }
 
   function disconnectDevice(device: OSSMdevice) {
     devices = devices.filter(d => d.deviceId !== device.deviceId);
@@ -213,10 +233,10 @@
 
 
       // Send startup sequence
+      const encoder = new TextEncoder();
       try {
-        const encoder = new TextEncoder();
-        const goMessage = encoder.encode("go:strokeEngine");
-        const goDataView = new DataView(goMessage.buffer);
+        //const goMessage = encoder.encode("go:strokeEngine");
+        const goDataView = new DataView(encoder.encode("go:strokeEngine").buffer);
         await BleClient.write(device.deviceId, newOSSM.service, newOSSM.tx, goDataView);
         
         const falseMessage = encoder.encode("false");
@@ -238,7 +258,7 @@
         let indexFallback = 0;
         patternsObject.forEach((pattern: any) => {
           console.log("Pattern:", pattern);
-          newOSSM.patterns.push({ name: pattern.name, idx: pattern.idx ?? indexFallback++ });
+          newOSSM.patterns.push({ name: pattern.name, idx: pattern.idx ?? indexFallback++, description: "" });
         });
         newOSSM.controls["pattern"].max = newOSSM.patterns.length - 1;
         newOSSM.controls["pattern"].limitMax = newOSSM.patterns.length - 1;
@@ -275,6 +295,12 @@
       }
 
       devices.push(newOSSM);
+
+      await fetchPatternDescription(
+        newOSSM,
+        $state.snapshot(newOSSM.patterns)[newOSSM.controls.pattern.value]
+      );
+
 
     } catch (error) {
       console.error("Bluetooth connection failed:", error);
@@ -328,7 +354,7 @@
                 <div class="slider-label">
                   {#if (control[0] === "pattern")}
                     Pattern: <span style="font-weight: normal;">{$state.snapshot(ossm.patterns)[control[1].value].name ?? control[1].value}</span>
-                    <div class="minMaxText"  style="font-weight: normal;">{ossm.patternDescriptions[control[1].value]?.[1] ?? "(EXPERIMENTAL!) A custom pattern"}</div>
+                    <div class="minMaxText"  style="font-weight: normal;">{$state.snapshot(ossm.patterns)[control[1].value]?.description ?? ""}&nbsp;</div>
                   {:else}
                     {control[0].charAt(0).toUpperCase() + control[0].slice(1)}: {control[1].value} 
                     <span class="minMaxText">(Min: {control[1].limitMin}, Max: {control[1].limitMax})</span>
@@ -487,7 +513,7 @@
       <p>This supports <a target="_blank" href="https://www.researchanddesire.com/pages/ossm">OSSM devices</a> with a stock firmware from 2026 or newer.</p>
       <p>If your OSSM firmware is older or custom you can easily upgrade it using <a href="https://dashboard.researchanddesire.com/app/tools/web-flasher">their web flashing tool</a>.</p>
       {#if (!EOMembedded)}
-        <p>Coded with love and hedonism by <a href="http://rubberyfun.com/">Claus Macher</a>.  Have fun!</p>
+        <p>Coded with love and hedonism by <a href="http://rubberyfun.com/">Claus Macher</a>.  Main repo <a href="https://github.com/rubberyfun/OSSM-Possum">is posted here</a>.  Have fun!</p>
       {/if}
       <p></p>
     </div>
@@ -678,6 +704,7 @@
             pointer-events: none;
             cursor: pointer;
             -webkit-appearance: none;
+            appearance: none;
         }
 
 
