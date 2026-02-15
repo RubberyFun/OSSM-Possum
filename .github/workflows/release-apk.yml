@@ -36,6 +36,10 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Zip apk files
+        run: |
+          zip -r ossm-possum-${{ steps.release_action.outputs.version }}.apk.zip ./android/app/build/outputs/apk/release/*
+
       - name: Upload release assets
         if: ${{ steps.release_action.outputs.released == 'true' }}
         uses: actions/upload-release-asset@v1
@@ -45,4 +49,4 @@ jobs:
           upload_url: ${{ steps.release_action.outputs.upload_url }}
           asset_path: ./android/app/build/outputs/apk/release/* # specify your build output directory and files
           asset_content_type: application/vnd.android.package-archive
-          asset_name: ossm-possum-${{ steps.release_action.outputs.version }}.apk # you might need to zip the directory first
+          asset_name: ossm-possum-${{ steps.release_action.outputs.version }}.apk.zip # you might need to zip the directory first
