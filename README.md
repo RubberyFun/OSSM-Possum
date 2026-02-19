@@ -14,7 +14,7 @@
 
 1. Download it for offline use as a PWA:  Pull up the above webpage, open the browser menu (usually a three dots icon) and choose "Add to Home screen" then "Install".  Poof, its on your phone even if you're in a dungeon with no cell service.
 
-1. Get it from the Google Play store.  Unfortunately Google is being a little bitch about letting the app go live...they require testing first.  This is a call for help: please sign up for beta testing to get the android app.  You can do so by joining [this google group](https://groups.google.com/g/ossm-possum).  You'll get an automated email with the download link.  Once 12 people have signed up for testing the app will go live and I'll delete the group permanently.
+1. Get it from the Google Play store.  Unfortunately Google is being a little bitch about letting the app go live...they require testers first.  **This is a call for help**: please sign up for beta testing to get the android app.  You can do so by joining [this google group](https://groups.google.com/g/ossm-possum).  You'll get an automated message with the download link.  Once 12 people have signed up for testing the app will go live and I'll delete the group permanently.
 
 1. [Get it from the Apple App Store from this link](https://apps.apple.com/us/app/ossm-possum/id6758223317) or by searching for "ossm".  Apple is more straightforward to work with: they just want money. (it's $100/yr to launch apps and you can't do it without having a newer mac).
 
@@ -30,7 +30,7 @@
 [Link to the demonstration video](https://rubberyfun.github.io/OSSM-Possum/public/demo1b.mp4)
 
 ## Adding custom patterns
-R+D doesn't officially support patterns besides the 7 stock ones.  Custom patterns may not be well tested or are known to have potentially dangerous issues (Looking at you Jackhammer an Stroke Nibbler).  **OSSM Possum will happily load whatever patterns you have on your device.**  If it's a pattern I haven't seen before it will show the name but the only description will be "A custom pattern".  I am not endorsing using custom patterns, just supporting the possibility. They wouldn't exist if there weren't some fun to be had.  Use caution.  If you want your pattern description added you can reach me at the [KM discord](https://discord.com/channels/559409652425687041/1469058487123443888).  
+R+D doesn't officially support patterns besides the 7 stock ones but they left the option open.  Custom patterns may not be well tested or are known to have potentially dangerous issues (Looking at you Jackhammer an Stroke Nibbler).  **OSSM Possum will happily load whatever patterns you have on your device.**  I am not endorsing using custom patterns, just supporting the possibility. They wouldn't exist if there weren't some fun to be had.  Use caution.
 
 #### Instructions for adding patterns:
 1. Add the pattern code to  lib/StrokeEngine/src/pattern.h

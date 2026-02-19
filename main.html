@@ -9,6 +9,17 @@
     <link rel="mask-icon" href="favicon.svg" color="#3a3a3a">
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#3a3a3a">
+    <script>
+      window.coi = {
+        shouldRegister: () => !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()),
+        shouldDeregister: () => !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()),
+        doReload: () => {
+          if (!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) {
+            window.location.reload()
+          }
+        }
+      }
+    </script>
     <script src="coi-serviceworker.min.js"></script>
   </head>
   <body>

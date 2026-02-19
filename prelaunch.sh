@@ -19,6 +19,8 @@ npx cap sync ios
 
 #build android release apk
 cd android
+./gradlew --refresh-dependencies
+./gradlew :app:dependencies
 ./gradlew assembleRelease
 ./gradlew bundleRelease  #WIP signing not working yet...still gotta open Android Studio
 cd ..
