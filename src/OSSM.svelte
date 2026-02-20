@@ -28,7 +28,7 @@
 
   interface OSSMdevice {
     name: string;
-    deviceId: string | null;
+    deviceId: string;
     service: string;
     tx: string;
     tx_knob: string;
@@ -36,6 +36,7 @@
     rx_patterns: string;
     rw_pattern_descriptions: string;
     conn_status: string;
+    ossm_state: string;
     unpause_speed: number;
     patterns: OSSMPattern[];
     controls: Record<string, OSSMcontrol>;
@@ -54,9 +55,10 @@
     rx_patterns = "";
     tx = "";
     tx_knob = "";
+    ossm_state = "";
     rw_pattern_descriptions = "";
     unpause_speed = 1;
-    deviceId = $state<string | null>(null);
+    deviceId = $state<string>("");
     conn_status = $state("Disconnected");
     patterns = $state<OSSMPattern[]>([]);
     controls = $state<Record<string, OSSMcontrol>>({});
@@ -80,6 +82,7 @@
       this.rx_patterns = "522b443a-4f53-534d-3000-420badbabe69";
       this.rw_pattern_descriptions = "522b443a-4f53-534d-3010-420badbabe69";
       this.unpause_speed = 1;
+      this.ossm_state = "";
       this.controls = {
         speed: { value: 0, default: 0, min: 0, max: 100, mode: "pleasure", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust how fast it goes back and forth" },
         stroke: { value: 50, default: 50, min: 0, max: 100, mode: "manual", limitMin: 0, limitMax: 100, inverted: false, description: "Adjust the length of each stroke"  },
@@ -240,7 +243,7 @@
       devices = stored.map((entry) => {
         const restored = new OSSMDevice();
         restored.name = entry.name ?? "";
-        restored.deviceId = entry.deviceId ?? null;
+        restored.deviceId = entry.deviceId ?? "";
         restored.conn_status = "Disconnected";
         restored.unpause_speed = entry.unpause_speed ?? restored.unpause_speed;
         restored.patterns = entry.patterns ?? restored.patterns;
@@ -287,6 +290,7 @@
           name: device.name,
           deviceId: device.deviceId,
           conn_status: device.conn_status,
+          ossm_state: device.ossm_state,
           service: device.service,
           tx: device.tx,
           tx_knob: device.tx_knob,
@@ -460,6 +464,40 @@
     device.resetControls();
   }
 
+  async function readState(ossm: OSSMdevice) {
+    // Read state from rx_state characteristic
+    try {
+      const stateData = await BleClient.read(ossm.deviceId, ossm.service, ossm.rx_state);
+      const decoder = new TextDecoder();
+      const stateString = decoder.decode(stateData);
+      const stateObject = JSON.parse(stateString);
+      
+      // Update control values from device state
+      if (stateObject.speed !== undefined) {
+        ossm.controls.speed.value = stateObject.speed;
+      }
+      if (stateObject.stroke !== undefined) {
+        ossm.controls.stroke.value = stateObject.stroke;
+      }
+      if (stateObject.depth !== undefined) {
+        ossm.controls.depth.value = stateObject.depth;
+      }
+      if (stateObject.pattern !== undefined) {
+        ossm.controls.pattern.value = stateObject.pattern;
+      }
+      if (stateObject.sensation !== undefined) {
+        ossm.controls.sensation.value = stateObject.sensation;
+      }
+      if (stateObject.state !== undefined) {
+        ossm.ossm_state = stateObject.state;
+      }
+      logDevicesState("State updated:");
+    } catch (error) {
+      console.error("Failed to read state:", error, logDevicesState("Current devices state:"));
+    }
+
+  }
+
   async function connectBluetooth() {
     let newOSSM = new OSSMDevice();
     connectionError = null;
@@ -498,8 +536,7 @@
       newOSSM.conn_status = "Connecting...";
       newOSSM.deviceId = device.deviceId;
       newOSSM.name = (device.name || "OSSM") + " (" + device.deviceId.slice(-6,-2) + ")";
-      logDevicesState(`Connected to device: ${newOSSM.name}`);
-      upsertDevice(newOSSM);
+      logDevicesState(`Connected to new device: ${newOSSM.name}`);
 
 
       
@@ -511,28 +548,6 @@
 
       
       
-      newOSSM.conn_status = "Connected";
-      upsertDevice(newOSSM);
-
-
-
-      // Send startup sequence
-      const encoder = new TextEncoder();
-      try {
-        //const goMessage = encoder.encode("go:strokeEngine");
-        const goDataView = new DataView(encoder.encode("go:strokeEngine").buffer);
-        await BleClient.write(device.deviceId, newOSSM.service, newOSSM.tx, goDataView);
-        
-        const falseMessage = encoder.encode("false");
-        const falseDataView = new DataView(falseMessage.buffer);
-        await BleClient.write(device.deviceId, newOSSM.service, newOSSM.tx_knob, falseDataView);
-
-
-        console.log("Sent startup sequence");
-      } catch (error) {
-        console.error("Failed to send startup sequence:", error,logDevicesState("Current devices state:"));
-      }
-
       // Read patterns from rx_patterns characteristic
       try {
         const patternsData = await BleClient.read(device.deviceId, newOSSM.service, newOSSM.rx_patterns);
@@ -562,41 +577,42 @@
         console.error("Failed to read patterns:", error, logDevicesState("Current devices state:"));
       }
 
-      // Read initial state from rx_state characteristic
-      try {
-        const stateData = await BleClient.read(device.deviceId, newOSSM.service, newOSSM.rx_state);
-        const decoder = new TextDecoder();
-        const stateString = decoder.decode(stateData);
-        const stateObject = JSON.parse(stateString);
-        console.log("Initial state:", stateObject, logDevicesState("Current devices state:"));
-        
-        // Update control values from device state
-        if (stateObject.speed !== undefined) {
-          newOSSM.controls.speed.value = stateObject.speed;
-        }
-        if (stateObject.stroke !== undefined) {
-          newOSSM.controls.stroke.value = stateObject.stroke;
-        }
-        if (stateObject.depth !== undefined) {
-          newOSSM.controls.depth.value = stateObject.depth;
-        }
-        if (stateObject.pattern !== undefined) {
-          newOSSM.controls.pattern.value = stateObject.pattern;
-        }
-        if (stateObject.sensation !== undefined) {
-          newOSSM.controls.sensation.value = stateObject.sensation;
-        }
-      } catch (error) {
-        console.error("Failed to read state:", error, logDevicesState("Current devices state:"));
-      }
-
       if (newOSSM.patterns.length > 0 && !newOSSM.patterns[newOSSM.controls.pattern.value].description) {
         await fetchPatternDescription(
           newOSSM,
           $state.snapshot(newOSSM.patterns)[newOSSM.controls.pattern.value]
         );
       }
-      
+
+      await readState(newOSSM);
+
+      // Send startup sequence
+      logDevicesState("sending startup sequence");
+      const encoder = new TextEncoder();
+      try {
+        //const goMessage = encoder.encode("go:strokeEngine");
+        if (!newOSSM.ossm_state.includes("strokeEngine") && !newOSSM.ossm_state.includes("error")) {
+          console.log("Device not in strokeEngine/error mode, sending go command");
+          const goDataView = new DataView(encoder.encode("go:strokeEngine").buffer);
+          await BleClient.write(device.deviceId, newOSSM.service, newOSSM.tx, goDataView);
+        } else {
+          console.log("Device already in strokeEngine/error mode, skipping go command");
+        }
+        
+        //set bluetooth to have full control of speed knob
+        const falseMessage = encoder.encode("false");
+        const falseDataView = new DataView(falseMessage.buffer);
+        await BleClient.write(device.deviceId, newOSSM.service, newOSSM.tx_knob, falseDataView);
+
+
+        console.log("Sent startup sequence");
+      } catch (error) {
+        console.error("Failed to send startup sequence:", error,logDevicesState("Current devices state:"));
+      }
+
+
+      newOSSM.conn_status = "Connected";
+
       upsertDevice(newOSSM);
       
       logDevicesState("Finished connecting and initializing device:");
