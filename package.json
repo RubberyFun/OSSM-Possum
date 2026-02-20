@@ -1,5 +1,6 @@
 {
-  "name": "RubberyFun/OSSM-Possum",
+  "name": "ossm-possum",
+  "description": "OSSM-Possum is a cross-platform application built with Svelte and Capacitor, designed to control the Kinky Makers OSSM via bluetooth.",
   "repository": {"type": "git", "url": "https://github.com/RubberyFun/OSSM-Possum.git"},
   "private": false,
   "version": "1.5.6",
@@ -14,7 +15,7 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.1.0",
+    "@capacitor/cli": "^8.0.1",
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@tsconfig/svelte": "^5.0.8",
     "@types/node": "^25.3.0",
@@ -29,11 +30,11 @@
     "vite-plugin-singlefile": "^2.3.0"
   },
   "dependencies": {
-    "@capacitor-community/bluetooth-le": "^8.1.0",
-    "@capacitor/android": "^8.1.0",
-    "@capacitor/core": "^8.1.0",
-    "@capacitor/ios": "^8.1.0",
-    "@capacitor/preferences": "^8.1.0",
+    "@capacitor-community/bluetooth-le": "^8.0.1",
+    "@capacitor/android": "^8.0.1",
+    "@capacitor/core": "^8.0.1",
+    "@capacitor/ios": "^8.0.1",
+    "@capacitor/preferences": "^8.0.1",
     "buffer": "^6.0.3",
     "buttplug": "0.13.2",
     "coi-serviceworker": "^0.1.7",
