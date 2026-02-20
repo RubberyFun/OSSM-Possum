@@ -33,6 +33,7 @@ body {
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
+  max-height: 100vh;
   width: 100%;
   max-width: 100vw;
   overflow-x: hidden;
@@ -441,6 +442,9 @@ button:hover {
         -webkit-appearance: none;
         margin: 0;
     }
+    .slider-with-buttons {
+      width:100%;
+    }
     .slider {
       width: 100%;
       height: 6px;
@@ -469,6 +473,7 @@ button:hover {
         pointer-events: none;
         cursor: pointer;
         -webkit-appearance: none;
+        appearance: none;
     }
 
 
