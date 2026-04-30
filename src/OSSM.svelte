@@ -208,7 +208,7 @@
     return devices.map((device) => ({
       name: device.name,
       deviceId: device.deviceId,
-      conn_status: device.conn_status,
+      conn_status: "Disconnected",
       unpause_speed: device.unpause_speed,
       patterns: $state.snapshot(device.patterns),
       controls: $state.snapshot(device.controls),
