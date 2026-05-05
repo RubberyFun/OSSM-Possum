@@ -1,9 +1,9 @@
 {
   "name": "ossm-possum",
-  "description": "OSSM-Possum is a cross-platform application built with Svelte and Capacitor, designed to control the Kinky Makers OSSM via bluetooth.",
+  "description": "OSSM-Possum is a cross-platform application to control the Kinky Makers OSSM via bluetooth,built with Svelte and Capacitor.",
   "repository": {"type": "git", "url": "https://github.com/RubberyFun/OSSM-Possum.git"},
   "private": false,
-  "version": "1.6.0",
+  "version": "1.6.1",
   "type": "module",
   "scripts": {
     "dev": "vite",

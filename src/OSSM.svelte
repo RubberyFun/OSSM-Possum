@@ -649,33 +649,32 @@
         <div>
           {#if ($state.snapshot(ossm.controls)["speed"].value > 0)} 
             <button class="device-pause" title="Pause" onclick={() => {
-                  const initial_speed = $state.snapshot(ossm.controls)["speed"].value;
-                  const steps = 10;
-                  for (let i = 1; i < steps; i++) {
-                    setTimeout(() => {
-                      ossm.setControl("speed", Math.round(initial_speed * (steps - i) / steps));
-                    }, i * 15);
-                  }
-                  setTimeout(async () => {
-                    await ossm.setControl("speed", 0);
-                    ossm.unpause_speed = initial_speed;
-                  }, (steps+1) * 15);
+              const initial_speed = $state.snapshot(ossm.controls)["speed"].value;
+              const steps = 10;
+              const rampDown = async (i: number) => {
+                await ossm.setControl("speed", Math.round(initial_speed * (steps - i) / steps));
+                if (i < steps) {
+                  setTimeout(() => rampDown(i + 1), 15);
+                } else {
+                  ossm.unpause_speed = initial_speed;
+                }
+              };
+              rampDown(1);
             }}>
               <div style="line-height: 1.25;">❚❚</div>
             <div style="font-size: xx-small;">Pause</div>
             </button>
           {:else}
             <button class="device-resume" title="Pause" onclick={() => {
-                  const target = $state.snapshot(ossm.unpause_speed);
-                  const steps = 10;
-                  for (let i = 1; i <= steps; i++) {
-                    setTimeout(() => {
-                      ossm.setControl("speed", Math.round(target * i / steps));
-                    }, i * 25);
-                  }
-                  setTimeout(async () => {
-                    await ossm.setControl("speed", target);
-                  }, (steps+1) * 25);
+              const target = $state.snapshot(ossm.unpause_speed);
+              const steps = 10;
+              const rampUp = async (i: number) => {
+                await ossm.setControl("speed", Math.round(target * i / steps));
+                if (i < steps) {
+                  setTimeout(() => rampUp(i + 1), 25);
+                }
+              };
+              rampUp(1);
             }}>
             ▶
             <div style="font-size: xx-small;">Resume</div>
@@ -879,7 +878,8 @@
             class:active={selectedDeviceId === device.deviceId}
             onclick={() => { selectedDeviceId = device.deviceId; }}
           >
-            {device.name}
+            <img src="/little_possum1.svg" alt="" class="device-tab-icon" aria-hidden="true" />
+            <span>{device.name}</span>
           </button>
         {/each}
       <button onclick={() => connectBluetooth()}>
@@ -1246,7 +1246,6 @@
       border: 1px solid #555;
       border-top: none;
       border-radius: 0 0 8px 8px;
-      padding: 4px 10px;
       background: #1e1e1e;
       cursor: pointer;
       color: #888;
@@ -1255,6 +1254,12 @@
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 160px;
+      padding: 4px 2px 0 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 2px;
+      line-height: 1;
     }
 
     .device-tab.active {
@@ -1267,6 +1272,14 @@
     .device-tab:hover:not(.active) {
       background: #2a2a2a;
       color: #aaa;
+    }
+
+    .device-tab-icon {
+      align-self: center;
+      width: 75%;
+      max-height: 40px;
+      height: auto;
+      display: block;
     }
 
 }
