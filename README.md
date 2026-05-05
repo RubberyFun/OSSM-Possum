@@ -12,11 +12,11 @@
 
 1. Just pull up this web page in Chrome: [https://rubberyfun.github.io/OSSM-Possum/public/](https://rubberyfun.github.io/OSSM-Possum/public/) 
 
-1. Download it for offline use as a PWA:  Pull up the above webpage, open the browser menu (usually a three dots icon) and choose "Add to Home screen" then "Install".  Poof, its on your phone even if you're in a dungeon with no cell service.
+1. Install as a PWA for offline use:  Pull up the above webpage, open the browser menu (usually a three dots icon) and choose "Add to Home screen" then "Install".  Poof, its on your phone/computer/tablet even if you're in a dungeon with no cell service.
 
-1. Get it from the Google Play store.  Unfortunately Google is being a little bitch about letting the app go live...they require testers first.  **This is a call for help**: please sign up for beta testing to get the android app.  You can do so by joining [this google group](https://groups.google.com/g/ossm-possum).  You'll get an automated message with the download link.  Once 12 people have signed up for testing the app will go live and I'll delete the group permanently.
+1. [Get it from the Google Play store](https://play.google.com/store/apps/details?id=com.rubberyfun.ossmpossum.app&pli=1).  (after much ado about getting verified...thanks everybody who signed up for the beta).  If you can't use this link right now just search for "ossm" from your phone.
 
-1. [Get it from the Apple App Store from this link](https://apps.apple.com/us/app/ossm-possum/id6758223317) or by searching for "ossm".  Apple is more straightforward to work with: they just want money. (it's $100/yr to launch apps and you can't do it without having a newer mac).
+1. [Get it from the Apple App Store from this link](https://apps.apple.com/us/app/ossm-possum/id6758223317) If you can't use this link right now just search for "ossm" from your phone.  
 
 1. Install the APK directly on your Android device.  You can easily look up how to do this, I won't go into it here.  The APK file is [in the releases](https://github.com/RubberyFun/OSSM-Possum/releases/).
 
@@ -51,14 +51,13 @@ I've also developed [OSSM Job: a quick conversion kit to turn your OSSM into a p
 
 - I didn't include simple penetration mode.  It starts up in the "Simple Stroke" pattern already...They are identical so I just don't see the need.
 
-- If you use a browser and not the app: Safari and Firefox are not onboard with web pages having access to bluetooth...and they never will be for better or worse.  You need Chrome for the web version on Mac or PC...oh and Apple has a stranglehold on iOS chrome, so it won't work for iPhones/iPads at all besides the app.
+- If you use a browser and not the app: Safari and Firefox are not onboard with web pages having access to bluetooth...and they never will be for better or worse.  You need Chrome for the web version on Mac or PC...oh and Apple has a stranglehold on iOS chrome, so it won't work for iPhones/iPads at all besides the store app.  Chromium for linux can be made to work be enabling experimental web extensions.
 
 
 
 ## Planned features
 
-- Control multiple OSSM's linked from one panel
-- Control multiple OSSM's separately from individual tabs
+- Control multiple OSSM's linked from one panel:  Its already got support for multiple devices on different tabs, but wouldn't it be fun if you could link their speeds and control them from a single slider?
 - Automation tab?  Set it to ramp up the speed or stroke over a time span. Maybe have patterns.  
 - I'm hesitant to allow input/integration from sources like XToys...I think that's out of scope for the little Possum and gets into [EOM territory](https://github.com/RubberyFun/endless-orgasm-machine).
 - [DM me your suggestions at the Kinky Makers discord](https://discord.com/channels/559409652425687041/1286888639501959280/threads/1469058487123443888) and thanks to everyone there for all the testing and suggestions!
