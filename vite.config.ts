@@ -18,7 +18,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: ['buttplug', 'buffer'],
-    esbuildOptions: {
+    rolldownOptions: {
       define: {
         global: 'globalThis'
       }

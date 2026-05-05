@@ -131,9 +131,11 @@
         }
         const dataView = new DataView(encoder.encode(message).buffer);
         if (this.deviceId) await BleClient.write(this.deviceId, this.service, this.tx, dataView);
-        if (name === "speed" && value === 0) {
-          console.log(`Paused device, storing unpause speed ${this.unpause_speed}`, this.controls["speed"].value);
-          this.unpause_speed = this.controls["speed"].value;
+        if (name === "speed") {
+          if (value === 0) {
+            console.log(`Paused device, storing unpause speed ${this.unpause_speed}`, this.controls["speed"].value);
+            this.unpause_speed = this.controls["speed"].value;
+          }
         }
         this.controls[name].value = value;
         console.log(`Wrote control ${name} with value ${value}`);
@@ -191,6 +193,16 @@
   });
   
   let connectionError = $state<string | null>(null);
+  let selectedDeviceId = $state<string>("");
+
+  $effect(() => {
+    const connected = devices.filter(d => d.conn_status === "Connected");
+    if (connected.length === 0) {
+      selectedDeviceId = "";
+    } else if (!connected.find(d => d.deviceId === selectedDeviceId)) {
+      selectedDeviceId = connected[0].deviceId;
+    }
+  });
 
   const DEVICES_PREFERENCES_KEY = "ossmpossum.devices";
 
@@ -630,21 +642,40 @@
 
 <div class="bluetooth-ossm-control" style="--version: '{pkg.version}';">
   {#if devicesSnapshot().filter(device => device.conn_status === "Connected").length}
-    {#each devicesSnapshot() as ossm, deviceIndex}
+    {#each devicesSnapshot().filter(d => d.conn_status === "Connected" && d.deviceId === selectedDeviceId) as ossm, deviceIndex}
         <!-- <h4 style="position: absolute;left: 85px">{ossm.name}</h4> -->
       <div style="display: flex;flex-direction: row;justify-content: space-between;margin-bottom: 10px; ">
 
         <div>
           {#if ($state.snapshot(ossm.controls)["speed"].value > 0)} 
             <button class="device-pause" title="Pause" onclick={() => {
-                  ossm.setControl("speed", 0);
+                  const initial_speed = $state.snapshot(ossm.controls)["speed"].value;
+                  const steps = 10;
+                  for (let i = 1; i < steps; i++) {
+                    setTimeout(() => {
+                      ossm.setControl("speed", Math.round(initial_speed * (steps - i) / steps));
+                    }, i * 15);
+                  }
+                  setTimeout(async () => {
+                    await ossm.setControl("speed", 0);
+                    ossm.unpause_speed = initial_speed;
+                  }, (steps+1) * 15);
             }}>
               <div style="line-height: 1.25;">❚❚</div>
             <div style="font-size: xx-small;">Pause</div>
             </button>
           {:else}
             <button class="device-resume" title="Pause" onclick={() => {
-                  ossm.setControl("speed", $state.snapshot(ossm.unpause_speed));
+                  const target = $state.snapshot(ossm.unpause_speed);
+                  const steps = 10;
+                  for (let i = 1; i <= steps; i++) {
+                    setTimeout(() => {
+                      ossm.setControl("speed", Math.round(target * i / steps));
+                    }, i * 25);
+                  }
+                  setTimeout(async () => {
+                    await ossm.setControl("speed", target);
+                  }, (steps+1) * 25);
             }}>
             ▶
             <div style="font-size: xx-small;">Resume</div>
@@ -840,6 +871,22 @@
       {/each}
 
     {/each}
+    {#if devicesSnapshot().filter(d => d.conn_status === "Connected").length > 0}
+      <div class="device-tabs">
+        {#each devicesSnapshot().filter(d => d.conn_status === "Connected") as device}
+          <button
+            class="device-tab"
+            class:active={selectedDeviceId === device.deviceId}
+            onclick={() => { selectedDeviceId = device.deviceId; }}
+          >
+            {device.name}
+          </button>
+        {/each}
+      <button onclick={() => connectBluetooth()}>
+        +
+      </button>
+      </div>
+    {/if}
     {:else}
     <div  style="font-size: small;">
       <p>This supports <a target="_blank" href="https://www.researchanddesire.com/pages/ossm">OSSM devices</a> with a stock firmware from 2026 or newer.</p>
@@ -853,11 +900,10 @@
  {#if (EOMembedded || devices.filter(device => device.conn_status === "Connected").length == 0)}
    <div>
     <button onclick={() => connectBluetooth()}>
-      Connect to an{#if devices.filter(device => device.conn_status === "Connected").length}other{:else}{/if} OSSM device
+      Connect to an OSSM device
     </button>
-    
   </div>
-  {/if}
+ {/if}
   
   {#if connectionError}
     <div style="color: #c00; font-weight: bold; margin-top: 10px; padding: 10px; background-color: #fee; border: 1px solid #faa; border-radius: 4px;">
@@ -1185,6 +1231,42 @@
           margin-bottom: 0px;
           gap: 0.5rem;
         }
+    }
+
+    .device-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 10px;
+      padding-top: 2px;
+      border-top: 1px solid #555;
+    }
+
+    .device-tab {
+      border: 1px solid #555;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 4px 10px;
+      background: #1e1e1e;
+      cursor: pointer;
+      color: #888;
+      font-size: small;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+
+    .device-tab.active {
+      background: #3a3a3a;
+      color: #ddd;
+      border-color: #888;
+      font-weight: bold;
+    }
+
+    .device-tab:hover:not(.active) {
+      background: #2a2a2a;
+      color: #aaa;
     }
 
 }
